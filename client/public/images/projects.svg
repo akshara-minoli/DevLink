@@ -1,0 +1,27 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <linearGradient id="projectGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#58f0c6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#9143ff;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Kanban board -->
+  <rect x="30" y="50" width="50" height="120" rx="4" fill="url(#projectGrad)" opacity="0.3" stroke="url(#projectGrad)" stroke-width="2"/>
+  <rect x="40" y="60" width="30" height="25" rx="2" fill="url(#projectGrad)" opacity="0.8"/>
+  <rect x="40" y="90" width="30" height="25" rx="2" fill="url(#projectGrad)" opacity="0.6"/>
+  <rect x="40" y="120" width="30" height="25" rx="2" fill="url(#projectGrad)" opacity="0.4"/>
+  
+  <rect x="100" y="50" width="50" height="120" rx="4" fill="url(#projectGrad)" opacity="0.3" stroke="url(#projectGrad)" stroke-width="2"/>
+  <rect x="110" y="60" width="30" height="35" rx="2" fill="url(#projectGrad)" opacity="0.7"/>
+  <rect x="110" y="100" width="30" height="25" rx="2" fill="url(#projectGrad)" opacity="0.5"/>
+  
+  <rect x="170" y="50" width="0" height="120" rx="4" fill="url(#projectGrad)" opacity="0.2" stroke="url(#projectGrad)" stroke-width="2"/>
+  <rect x="155" y="60" width="30" height="25" rx="2" fill="url(#projectGrad)" opacity="0.6"/>
+  <rect x="155" y="90" width="30" height="35" rx="2" fill="url(#projectGrad)" opacity="0.8"/>
+  
+  <!-- Progress indicator -->
+  <circle cx="100" cy="180" r="8" fill="url(#projectGrad)" opacity="0.5"/>
+  <circle cx="110" cy="180" r="8" fill="url(#projectGrad)" opacity="0.8"/>
+  <circle cx="120" cy="180" r="8" fill="url(#projectGrad)" opacity="0.3"/>
+</svg>

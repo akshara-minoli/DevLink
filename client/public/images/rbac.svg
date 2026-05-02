@@ -1,0 +1,38 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <linearGradient id="rbacGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5ad7ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#58f0c6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Role 1 (Admin) -->
+  <circle cx="50" cy="60" r="22" stroke="url(#rbacGrad)" stroke-width="2.5"/>
+  <circle cx="50" cy="60" r="18" fill="url(#rbacGrad)" opacity="0.2"/>
+  <text x="50" y="67" font-size="18" fill="url(#rbacGrad)" text-anchor="middle" font-weight="bold">👑</text>
+  
+  <!-- Role 2 (Editor) -->
+  <circle cx="100" cy="50" r="22" stroke="url(#rbacGrad)" stroke-width="2.5"/>
+  <circle cx="100" cy="50" r="18" fill="url(#rbacGrad)" opacity="0.15"/>
+  <text x="100" y="57" font-size="18" fill="url(#rbacGrad)" text-anchor="middle" font-weight="bold">✏️</text>
+  
+  <!-- Role 3 (Viewer) -->
+  <circle cx="150" cy="60" r="22" stroke="url(#rbacGrad)" stroke-width="2.5"/>
+  <circle cx="150" cy="60" r="18" fill="url(#rbacGrad)" opacity="0.1"/>
+  <text x="150" y="67" font-size="18" fill="url(#rbacGrad)" text-anchor="middle" font-weight="bold">👁️</text>
+  
+  <!-- Permission indicators -->
+  <line x1="55" y1="85" x2="55" y2="130" stroke="url(#rbacGrad)" stroke-width="2" opacity="0.4"/>
+  <line x1="100" y1="75" x2="100" y2="130" stroke="url(#rbacGrad)" stroke-width="2" opacity="0.4"/>
+  <line x1="145" y1="85" x2="145" y2="130" stroke="url(#rbacGrad)" stroke-width="2" opacity="0.4"/>
+  
+  <!-- Permission dots -->
+  <circle cx="55" cy="140" r="5" fill="url(#rbacGrad)" opacity="0.9"/>
+  <circle cx="55" cy="155" r="5" fill="url(#rbacGrad)" opacity="0.9"/>
+  <circle cx="55" cy="170" r="5" fill="url(#rbacGrad)" opacity="0.9"/>
+  
+  <circle cx="100" cy="140" r="5" fill="url(#rbacGrad)" opacity="0.6"/>
+  <circle cx="100" cy="155" r="5" fill="url(#rbacGrad)" opacity="0.6"/>
+  
+  <circle cx="145" cy="140" r="5" fill="url(#rbacGrad)" opacity="0.3"/>
+</svg>

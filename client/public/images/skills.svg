@@ -1,0 +1,30 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <!-- Gradient defs -->
+  <defs>
+    <linearGradient id="skillGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff4fd8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5ad7ff;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" stroke="url(#skillGrad)" stroke-width="2" opacity="0.3"/>
+  
+  <!-- Skill badges -->
+  <circle cx="80" cy="60" r="28" fill="url(#skillGrad)" opacity="0.8"/>
+  <text x="80" y="68" font-size="24" fill="white" text-anchor="middle" font-weight="bold">JS</text>
+  
+  <circle cx="120" cy="80" r="32" fill="url(#skillGrad)" opacity="0.6"/>
+  <text x="120" y="90" font-size="28" fill="white" text-anchor="middle" font-weight="bold">React</text>
+  
+  <circle cx="70" cy="130" r="30" fill="url(#skillGrad)" opacity="0.7"/>
+  <text x="70" y="140" font-size="24" fill="white" text-anchor="middle" font-weight="bold">Node</text>
+  
+  <circle cx="130" cy="120" r="26" fill="url(#skillGrad)" opacity="0.5"/>
+  <text x="130" y="128" font-size="18" fill="white" text-anchor="middle" font-weight="bold">CSS</text>
+  
+  <!-- Connection lines -->
+  <line x1="80" y1="90" x2="120" y2="110" stroke="url(#skillGrad)" stroke-width="2" opacity="0.4"/>
+  <line x1="100" y1="100" x2="70" y2="130" stroke="url(#skillGrad)" stroke-width="2" opacity="0.4"/>
+  <line x1="100" y1="100" x2="130" y2="120" stroke="url(#skillGrad)" stroke-width="2" opacity="0.4"/>
+</svg>
