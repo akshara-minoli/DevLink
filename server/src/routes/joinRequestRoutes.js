@@ -1,17 +1,19 @@
 import { Router } from 'express';
+import { requireAuth } from '../middleware/authMiddleware.js';
+import {
+  createJoinRequest,
+  approveJoinRequest,
+  rejectJoinRequest,
+  getProjectJoinRequests,
+  getUserJoinRequests,
+} from '../controllers/joinRequestController.js';
 
 const router = Router();
 
-router.post('/:projectId', (req, res) => {
-  res.status(201).json({ message: `Join request endpoint ready for project ${req.params.projectId}.` });
-});
-
-router.patch('/:id/approve', (req, res) => {
-  res.json({ message: `Join request ${req.params.id} approved.` });
-});
-
-router.patch('/:id/reject', (req, res) => {
-  res.json({ message: `Join request ${req.params.id} rejected.` });
-});
+router.get('/', requireAuth, getUserJoinRequests);
+router.get('/project/:projectId', requireAuth, getProjectJoinRequests);
+router.post('/:projectId', requireAuth, createJoinRequest);
+router.patch('/:id/approve', requireAuth, approveJoinRequest);
+router.patch('/:id/reject', requireAuth, rejectJoinRequest);
 
 export default router;

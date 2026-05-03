@@ -4,7 +4,7 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-function GetStartedPage() {
+function GetStartedPage({ setIsLoggedIn }) {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,6 +34,7 @@ function GetStartedPage() {
 
       localStorage.setItem('devlink_token', response.data.token);
       localStorage.setItem('devlink_user', JSON.stringify(response.data.user));
+        if (typeof setIsLoggedIn === 'function') setIsLoggedIn(true);
       navigate('/dashboard');
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Registration failed. Please try again.');
@@ -43,13 +44,19 @@ function GetStartedPage() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-lg animate-fade-in rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_24px_70px_rgba(15,23,42,0.08)] sm:p-10">
-      <p className="mb-3 text-xs font-black uppercase tracking-[0.28em] text-cyan-700">Create account</p>
-      <h1 className="text-3xl font-black text-slate-950">Get Started with DevLink</h1>
-      <p className="mt-3 text-slate-600">Join the platform and start collaborating in minutes.</p>
+    <main className="mx-auto w-full max-w-lg animate-fade-in rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_24px_70px_rgba(15,23,42,0.08)] sm:rounded-[2rem] sm:p-8">
+      <Link to="/" className="mb-4 inline-flex items-center gap-2 text-sm text-slate-600 hover:text-sky-700">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+          <path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L4.414 9H18a1 1 0 110 2H4.414l3.293 3.293a1 1 0 010 1.414z" clipRule="evenodd" />
+        </svg>
+        <span className="text-sm font-medium">Home</span>
+      </Link>
+      <p className="mb-2 text-xs font-black uppercase tracking-[0.28em] text-cyan-700 sm:mb-3">Create account</p>
+      <h1 className="text-2xl font-black text-slate-950 sm:text-3xl">Get Started with DevLink</h1>
+      <p className="mt-2 text-sm text-slate-600 sm:mt-3">Join the platform and start collaborating in minutes.</p>
 
-      <form className="mt-8 grid gap-4" onSubmit={handleSubmit}>
-        <label className="grid gap-2 text-sm text-slate-700" htmlFor="name">
+      <form className="mt-6 grid gap-3 sm:mt-8 sm:gap-4" onSubmit={handleSubmit}>
+        <label className="grid gap-1 text-xs text-slate-700 sm:gap-2 sm:text-sm" htmlFor="name">
           Name
           <input
             id="name"
@@ -58,12 +65,12 @@ function GetStartedPage() {
             onChange={(event) => setName(event.target.value)}
             required
             minLength={2}
-            className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400"
+            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 sm:rounded-xl sm:px-4 sm:py-3"
             placeholder="Your name"
           />
         </label>
 
-        <label className="grid gap-2 text-sm text-slate-700" htmlFor="email">
+        <label className="grid gap-1 text-xs text-slate-700 sm:gap-2 sm:text-sm" htmlFor="email">
           Email
           <input
             id="email"
@@ -71,12 +78,12 @@ function GetStartedPage() {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
-            className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400"
+            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 sm:rounded-xl sm:px-4 sm:py-3"
             placeholder="you@example.com"
           />
         </label>
 
-        <label className="grid gap-2 text-sm text-slate-700" htmlFor="password">
+        <label className="grid gap-1 text-xs text-slate-700 sm:gap-2 sm:text-sm" htmlFor="password">
           Password
           <input
             id="password"
@@ -85,12 +92,12 @@ function GetStartedPage() {
             onChange={(event) => setPassword(event.target.value)}
             required
             minLength={6}
-            className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-fuchsia-400"
+            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-fuchsia-400 sm:rounded-xl sm:px-4 sm:py-3"
             placeholder="At least 6 characters"
           />
         </label>
 
-        <label className="grid gap-2 text-sm text-slate-700" htmlFor="confirmPassword">
+        <label className="grid gap-1 text-xs text-slate-700 sm:gap-2 sm:text-sm" htmlFor="confirmPassword">
           Confirm Password
           <input
             id="confirmPassword"
@@ -99,23 +106,23 @@ function GetStartedPage() {
             onChange={(event) => setConfirmPassword(event.target.value)}
             required
             minLength={6}
-            className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-amber-400"
+            className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-amber-400 sm:rounded-xl sm:px-4 sm:py-3"
             placeholder="Re-enter your password"
           />
         </label>
 
-        {error ? <p className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</p> : null}
+        {error ? <p className="rounded-lg border border-rose-200 bg-rose-50 p-2 text-xs text-rose-700 sm:p-3 sm:text-sm">{error}</p> : null}
 
         <button
           type="submit"
           disabled={isLoading}
-          className="mt-2 inline-flex min-h-12 items-center justify-center rounded-full bg-gradient-to-r from-emerald-400 via-sky-400 to-fuchsia-400 px-5 py-3 font-semibold text-slate-950 transition hover:scale-[1.02] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+          className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-gradient-to-r from-emerald-400 via-sky-400 to-fuchsia-400 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:scale-[1.02] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70 sm:min-h-12 sm:rounded-full sm:px-5 sm:py-3"
         >
           {isLoading ? 'Creating account...' : 'Get Started'}
         </button>
       </form>
 
-      <p className="mt-6 text-sm text-slate-600">
+      <p className="mt-4 text-xs text-slate-600 sm:mt-6 sm:text-sm">
         Already have an account?{' '}
         <Link className="font-semibold text-cyan-700 transition hover:text-sky-700" to="/login">
           Login
