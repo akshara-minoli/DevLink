@@ -5,14 +5,14 @@ export default function HeroVideo({ src }) {
   return (
     <div className="absolute inset-0 -z-10 overflow-hidden">
       <video
-        className="absolute left-1/2 top-1/2 min-h-full min-w-full -translate-x-1/2 -translate-y-1/2 object-cover opacity-60"
+        className="absolute left-1/2 top-1/2 min-h-full min-w-full -translate-x-1/2 -translate-y-1/2 object-cover opacity-25"
         autoPlay
         muted
         loop
         playsInline
         src={src || fallback}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-transparent to-black/40" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/55 via-white/20 to-sky-100/40" />
     </div>
   );
 }

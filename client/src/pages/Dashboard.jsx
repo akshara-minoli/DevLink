@@ -32,9 +32,10 @@ export default function Dashboard() {
   if (loading) return <div className="p-8">Loading...</div>;
 
   return (
-    <main className="mx-auto w-full max-w-4xl p-8">
-      <h1 className="text-3xl font-bold text-white">Welcome, {user?.name}</h1>
-      <p className="mt-2 text-white/75">This is your dashboard. Your email: {user?.email}</p>
+    <main className="mx-auto w-full max-w-4xl rounded-[2rem] border border-slate-200 bg-white p-8 shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
+      <p className="mb-3 text-xs font-black uppercase tracking-[0.28em] text-cyan-700">Dashboard</p>
+      <h1 className="text-3xl font-bold text-slate-950">Welcome, {user?.name}</h1>
+      <p className="mt-2 text-slate-600">This is your dashboard. Your email: {user?.email}</p>
     </main>
   );
 }
