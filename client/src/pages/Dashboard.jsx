@@ -10,6 +10,7 @@ export default function Dashboard({ setIsLoggedIn }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
+  const technologies = user?.technologies || [];
 
   useEffect(() => {
     const token = localStorage.getItem('devlink_token');
@@ -41,19 +42,41 @@ export default function Dashboard({ setIsLoggedIn }) {
 
   const profileCompletion = user
     ? Math.round(
-        ((user.name ? 1 : 0) +
-          (user.email ? 1 : 0) +
-          (user.designation ? 1 : 0) +
-          (user.bio ? 1 : 0) +
-          (user.github || user.linkedin ? 1 : 0) +
-          (user.technologies?.length > 0 ? 1 : 0)) /
-          6 *
+        ((user.name ? 12 : 0) +
+          (user.email ? 8 : 0) +
+          (user.designation ? 12 : 0) +
+          (user.workExperience ? 12 : 0) +
+          (user.bio ? 14 : 0) +
+          (user.github ? 8 : 0) +
+          (user.linkedin ? 8 : 0) +
+          Math.min(technologies.length * 4, 26)) /
+          100 *
           100
       )
     : 0;
 
   const ownedProjects = projects.filter((p) => p.owner === user?.id);
   const joinedProjects = projects.filter((p) => p.owner !== user?.id && p.members?.includes(user?.id));
+
+  const handleDeleteProfile = async () => {
+    const confirmed = window.confirm('Delete your profile permanently? This cannot be undone.');
+    if (!confirmed) return;
+
+    const token = localStorage.getItem('devlink_token');
+
+    try {
+      await axios.delete(`${API_BASE_URL}/api/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      localStorage.removeItem('devlink_token');
+      localStorage.removeItem('devlink_user');
+      setIsLoggedIn?.(false);
+      navigate('/');
+    } catch (err) {
+      const message = err.response?.data?.message || 'Failed to delete profile.';
+      window.alert(message);
+    }
+  };
 
   if (loading)
     return (
@@ -132,7 +155,29 @@ export default function Dashboard({ setIsLoggedIn }) {
               >
                 Complete Profile
               </Link>
+              <button
+                type="button"
+                onClick={handleDeleteProfile}
+                className="mt-3 block w-full rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-center text-xs font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 hover:text-rose-800"
+              >
+                Delete Profile
+              </button>
             </div>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:rounded-[2rem] sm:p-8">
+            <p className="mb-4 text-xs font-black uppercase tracking-widest text-cyan-700">Skills Added</p>
+            {technologies.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {technologies.map((tech) => (
+                  <span key={tech} className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs font-semibold text-sky-700">
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-600">No skills added yet. Update your profile to add technologies.</p>
+            )}
           </div>
 
           {/* Stats Grid */}

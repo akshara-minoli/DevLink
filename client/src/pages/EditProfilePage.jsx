@@ -12,10 +12,11 @@ const designations = [
   'Data Scientist',
   'DevOps Engineer',
   'UI/UX Designer',
-  'Product Manager',
+  'Project Manager',
   'QA Engineer',
   'Mobile Developer',
-  'Cloud Architect',
+  'Cloud Engineer',
+  'Site Reliability Engineer',
   'Machine Learning Engineer',
 ];
 
@@ -29,9 +30,11 @@ const techStack = [
   'Python',
   'Java',
   'C++',
+  'C#/.net',
   'Go',
   'Rust',
   'PHP',
+  'Linux',
   'MongoDB',
   'PostgreSQL',
   'MySQL',
@@ -52,6 +55,7 @@ export default function EditProfilePage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [customTechnology, setCustomTechnology] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -108,6 +112,24 @@ export default function EditProfilePage() {
       technologies: prev.technologies.includes(tech)
         ? prev.technologies.filter((t) => t !== tech)
         : [...prev.technologies, tech],
+    }));
+  };
+
+  const addCustomTechnology = () => {
+    const tech = customTechnology.trim();
+    if (!tech) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      technologies: prev.technologies.includes(tech) ? prev.technologies : [...prev.technologies, tech],
+    }));
+    setCustomTechnology('');
+  };
+
+  const removeTechnology = (tech) => {
+    setFormData((prev) => ({
+      ...prev,
+      technologies: prev.technologies.filter((item) => item !== tech),
     }));
   };
 
@@ -234,6 +256,42 @@ export default function EditProfilePage() {
         {/* Technologies */}
         <label className="grid gap-2 text-xs text-slate-700 sm:gap-3 sm:text-sm">
           Technologies & Languages
+          <div className="flex flex-wrap gap-2">
+            {formData.technologies.map((tech) => (
+              <button
+                key={tech}
+                type="button"
+                onClick={() => removeTechnology(tech)}
+                className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-xs font-medium text-cyan-800 transition hover:border-cyan-300 hover:bg-cyan-100 sm:text-sm"
+                title="Remove technology"
+              >
+                {tech}
+                <span aria-hidden="true">×</span>
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={customTechnology}
+              onChange={(e) => setCustomTechnology(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  addCustomTechnology();
+                }
+              }}
+              className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 sm:rounded-xl sm:px-4 sm:py-3"
+              placeholder="Type another technology"
+            />
+            <button
+              type="button"
+              onClick={addCustomTechnology}
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-sky-400 hover:text-sky-700 sm:rounded-xl sm:px-5 sm:py-3"
+            >
+              Add
+            </button>
+          </div>
           <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:grid-cols-3 sm:p-4">
             {techStack.map((tech) => (
               <button
