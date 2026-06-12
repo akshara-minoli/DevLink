@@ -1,0 +1,172 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    @apply m-0 font-sans text-slate-900;
+    background:
+      radial-gradient(circle at top left, rgba(125, 211, 252, 0.24), transparent 28%),
+      radial-gradient(circle at top right, rgba(192, 132, 252, 0.14), transparent 24%),
+      radial-gradient(circle at bottom center, rgba(167, 243, 208, 0.18), transparent 28%),
+      linear-gradient(180deg, #f8fbff 0%, #eef6ff 52%, #e8f3ff 100%);
+  }
+
+  a {
+    @apply text-inherit no-underline;
+  }
+
+  button,
+  input {
+    font: inherit;
+  }
+}
+
+@layer components {
+  .app-shell {
+    @apply min-h-screen p-6;
+  }
+
+  .topbar {
+    @apply mx-auto mb-8 flex max-w-6xl flex-col items-start justify-between gap-4 rounded-[20px] border border-sky-100 bg-white/75 px-5 py-4 shadow-[0_18px_60px_rgba(15,23,42,0.08)] backdrop-blur-md md:flex-row md:items-center;
+  }
+
+  .brand {
+    @apply text-[1.1rem] font-bold tracking-[0.04em];
+  }
+
+  .nav-links {
+    @apply flex items-center gap-4 text-slate-600;
+  }
+
+  .hero-layout,
+  .auth-page {
+    @apply mx-auto max-w-6xl;
+  }
+
+  .hero-layout {
+    @apply grid gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)];
+  }
+
+  .auth-grid {
+    @apply grid w-full gap-6 md:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)];
+  }
+
+  .hero-copy,
+  .hero-card,
+  .auth-copy,
+  .auth-card {
+    @apply rounded-[28px] border border-slate-200 bg-white/80 shadow-[0_18px_70px_rgba(15,23,42,0.08)];
+  }
+
+  .hero-copy,
+  .auth-copy {
+    @apply p-12;
+  }
+
+  .hero-card,
+  .auth-card {
+    @apply p-8;
+  }
+
+  .hero-copy h1,
+  .auth-copy h1,
+  .auth-card h2,
+  .hero-card h2 {
+    @apply mb-4 leading-[1.02] text-slate-900;
+  }
+
+  .hero-copy h1,
+  .auth-copy h1 {
+    @apply max-w-[12ch] text-[clamp(2.8rem,7vw,5.5rem)];
+  }
+
+  .auth-copy h1 {
+    @apply max-w-[10ch] text-[clamp(2.4rem,6vw,4.7rem)];
+  }
+
+  .hero-text,
+  .hero-card p,
+  .auth-copy p,
+  .auth-card label,
+  .form-message,
+  .eyebrow,
+  .auth-switch {
+    @apply text-slate-600;
+  }
+
+  .eyebrow {
+    @apply mb-3 text-xs uppercase tracking-[0.16em];
+  }
+
+  .hero-actions {
+    @apply mt-7 flex flex-wrap gap-3;
+  }
+
+  .button {
+    @apply inline-flex items-center justify-center rounded-full border-0 bg-gradient-to-r from-sky-500 to-cyan-400 px-6 py-3 font-bold text-white shadow-[0_12px_30px_rgba(56,189,248,0.22)];
+  }
+
+  .button-secondary {
+    @apply border border-slate-200 bg-white text-slate-700 shadow-none;
+  }
+
+  .button-small {
+    @apply px-4 py-2.5;
+  }
+
+  .stack-card ul {
+    @apply mt-5 grid gap-3 pl-5 text-slate-700;
+  }
+
+  .pill {
+    @apply inline-flex items-center rounded-full bg-sky-100 px-3 py-1.5 text-[0.82rem] font-semibold text-sky-700;
+  }
+
+  .auth-highlights {
+    @apply mt-6 flex flex-wrap gap-2;
+  }
+
+  .auth-highlights span {
+    @apply rounded-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-600;
+  }
+
+  .form-grid {
+    @apply grid gap-4;
+  }
+
+  .form-grid label {
+    @apply grid gap-2 text-slate-800;
+  }
+
+  .form-grid input {
+    @apply w-full rounded-[16px] border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white;
+  }
+
+  .form-message {
+    @apply min-h-[1.4em];
+  }
+
+  .auth-button {
+    @apply mt-3 w-full;
+  }
+
+  .auth-switch {
+    @apply mt-4 text-center;
+  }
+
+  .auth-switch a {
+    @apply font-bold text-slate-900;
+  }
+
+}

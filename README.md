@@ -1,247 +1,74 @@
 # DevLink
 
-DevLink is a PERN stack web application that connects developers for collaboration on software projects. The platform allows users to create professional profiles, showcase technical skills, discover projects, and build teams based on shared interests and expertise.
+DevLink is a PERN stack starter for developer collaboration workflows. The repository now includes a runnable Express API, PostgreSQL schema bootstrapping, a React frontend, and Docker Compose so you can bring up the whole stack from the repo root.
 
-## 🚀 Features
+## What is included
 
-### User Authentication & Authorization
+- Root workspace scripts for local development
+- Express API with PostgreSQL connectivity and JWT auth endpoints
+- React app with login, register, and dashboard routes
+- Docker Compose for the full stack
 
-* Secure user registration and login
-* JWT-based authentication
-* Role-Based Access Control (RBAC)
+## Project structure
 
-### Developer Profiles
-
-* Create and manage developer profiles
-* Showcase skills, experience, and portfolio projects
-* Edit personal information and social links
-
-### Skill-Based Matching
-
-* Match developers with suitable projects
-* Search developers by skills and technologies
-* Filter projects based on required skill sets
-
-### Project Management
-
-* Create and manage software projects
-* Define project requirements and objectives
-* Assign project roles and responsibilities
-
-### Join Request System
-
-* Send requests to join projects
-* Approve or reject membership requests
-* Manage project participants
-
-### Team Collaboration
-
-* View project members
-* Manage team roles
-* Track project involvement
-
----
-
-## 🛠️ Technology Stack
-
-### Frontend
-
-* React.js
-* React Router
-* Axios
-* CSS / Tailwind CSS
-
-### Backend
-
-* Node.js
-* Express.js
-
-### Database
-
-* PostgreSQL
-
-### ORM
-
-* Prisma ORM
-
-### Authentication
-
-* JSON Web Tokens (JWT)
-* bcrypt.js
-
----
-
-## 📂 Project Structure
-
-```
+```text
 DevLink/
-│
-├── client/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   ├── context/
-│   │   └── App.jsx
-│   │
-│   └── package.json
-│
-├── server/
-│   ├── controllers/
-│   ├── routes/
-│   ├── middleware/
-│   ├── prisma/
-│   │   └── schema.prisma
-│   ├── models/
-│   ├── utils/
-│   └── server.js
-│
-├── README.md
-└── package.json
+├── backend/
+├── frontend/
+├── Dockerfile
+├── docker-compose.yml
+├── package.json
+└── README.md
 ```
 
----
+## Setup
 
-## 🗄️ Database Design
-
-### Main Entities
-
-* Users
-* Skills
-* Projects
-* Project Members
-* Join Requests
-* Roles
-
-### Relationships
-
-* One User can own multiple Projects.
-* One User can have multiple Skills.
-* One Project can have multiple Members.
-* Users can send multiple Join Requests.
-* Project Owners can approve or reject Join Requests.
-
----
-
-## ⚙️ Installation
-
-### Clone Repository
+Install dependencies from the repository root:
 
 ```bash
-git clone https://github.com/your-username/devlink.git
-cd devlink
-```
-
-### Backend Setup
-
-```bash
-cd server
 npm install
 ```
 
-### Frontend Setup
+Create your environment file from the example:
 
 ```bash
-cd client
-npm install
+copy .env.example .env
 ```
 
----
+If you want local PostgreSQL outside Docker, set the `DB_*` values in your `.env` file before starting the server.
 
-## 🔑 Environment Variables
+## Run locally
 
-Create a `.env` file inside the server directory.
-
-```env
-DATABASE_URL="postgresql://username:password@localhost:5432/devlink"
-
-JWT_SECRET=your_secret_key
-
-PORT=5000
-```
-
----
-
-## 🗃️ Prisma Setup
-
-Generate Prisma Client:
+Start both apps from the repository root:
 
 ```bash
-npx prisma generate
-```
-
-Run Database Migration:
-
-```bash
-npx prisma migrate dev --name init
-```
-
-Open Prisma Studio:
-
-```bash
-npx prisma studio
-```
-
----
-
-## ▶️ Running the Application
-
-### Start Backend
-
-```bash
-cd server
 npm run dev
 ```
 
-### Start Frontend
+Frontend: `http://localhost:5173`
+
+Backend: `http://localhost:5000`
+
+## Run with Docker
+
+Use the full-stack container setup from the repository root:
 
 ```bash
-cd client
-npm start
+docker compose up --build
 ```
 
-Application URLs:
+## API routes
 
-Frontend:
+- `GET /api/health`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+- `GET /api/users`
 
-```
-http://localhost:3000
-```
+## Database
 
-Backend:
+The backend creates the `users` table on startup when `DATABASE_URL` is configured. The starter is ready for future project, skill, and join-request tables.
 
-```
-http://localhost:5000
-```
+## Next steps
 
----
-
-## 🔒 Security Features
-
-* Password hashing using bcrypt
-* JWT authentication
-* Protected API routes
-* Role-based authorization
-* Input validation and sanitization
-
----
-
-## 🎯 Future Enhancements
-
-* Real-time chat using Socket.io
-* Project discussion forums
-* Notifications system
-* AI-based developer recommendations
-* GitHub integration
-* Task management dashboard
-
----
-
-## 👥 Authors
-
-Developed as part of the DevLink project.
-
-## 📄 License
-
-This project is licensed under the MIT License.
-.
+Add profile pages, project management features, join requests, and richer authorization rules on top of this scaffold.

@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-devlink}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devlink}
+      POSTGRES_DB: ${POSTGRES_DB:-devlink}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-devlink}
+      DB_USER: ${DB_USER:-devlink}
+      DB_PASSWORD: ${DB_PASSWORD:-devlink}
+      DATABASE_URL: ${DATABASE_URL:-}
+      JWT_SECRET: ${JWT_SECRET:-replace-this-with-a-long-random-string}
+      PORT: ${PORT:-5000}
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:5173}
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:5000}
+    ports:
+      - "5000:5000"
+      - "5173:5173"
+    command: npm run dev
+
+volumes:
+  db_data:
