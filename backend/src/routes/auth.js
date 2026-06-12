@@ -20,11 +20,34 @@ function createToken(user) {
   );
 }
 
-authRouter.post('/register', async (request, response, next) => {
-  const { name, email, password, role = 'developer' } = request.body ?? {};
+function toPublicUser(user) {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    role: user.role,
+    title: user.title,
+    bio: user.bio,
+    location: user.location,
+    avatarUrl: user.avatar_url,
+    githubUrl: user.github_url,
+    linkedinUrl: user.linkedin_url,
+    portfolioUrl: user.portfolio_url,
+    profileComplete: user.profile_complete,
+    createdAt: user.created_at,
+  };
+}
 
-  if (!name || !email || !password) {
-    return response.status(400).json({ message: 'Name, email, and password are required.' });
+authRouter.post('/register', async (request, response, next) => {
+  const { name, email, phone, password, confirmPassword } = request.body ?? {};
+
+  if (!name || !email || !phone || !password || !confirmPassword) {
+    return response.status(400).json({ message: 'Name, phone, email, password, and confirm password are required.' });
+  }
+
+  if (password !== confirmPassword) {
+    return response.status(400).json({ message: 'Passwords do not match.' });
   }
 
   try {
@@ -37,16 +60,16 @@ authRouter.post('/register', async (request, response, next) => {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const createdUser = await query(
-      `INSERT INTO users (name, email, password_hash, role)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, name, email, role, created_at`,
-      [name.trim(), normalizedEmail, passwordHash, role],
+      `INSERT INTO users (name, email, phone, password_hash, role)
+       VALUES ($1, $2, $3, $4, 'developer')
+       RETURNING id, name, email, phone, role, title, bio, location, avatar_url, github_url, linkedin_url, portfolio_url, profile_complete, created_at`,
+      [name.trim(), normalizedEmail, phone.trim(), passwordHash],
     );
 
     const user = createdUser.rows[0];
 
     return response.status(201).json({
-      user,
+      user: toPublicUser(user),
       token: createToken(user),
     });
   } catch (error) {
@@ -77,12 +100,7 @@ authRouter.post('/login', async (request, response, next) => {
     }
 
     return response.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: toPublicUser(user),
       token: createToken(user),
     });
   } catch (error) {
@@ -92,14 +110,20 @@ authRouter.post('/login', async (request, response, next) => {
 
 authRouter.get('/me', requireAuth, async (request, response, next) => {
   try {
-    const result = await query('SELECT id, name, email, role, created_at FROM users WHERE id = $1', [request.user.sub]);
+    const result = await query(
+      `SELECT id, name, email, phone, role, title, bio, location, avatar_url, github_url, linkedin_url,
+              portfolio_url, profile_complete, created_at
+       FROM users
+       WHERE id = $1`,
+      [request.user.sub],
+    );
     const user = result.rows[0];
 
     if (!user) {
       return response.status(404).json({ message: 'User not found.' });
     }
 
-    return response.json({ user });
+    return response.json({ user: toPublicUser(user) });
   } catch (error) {
     return next(error);
   }

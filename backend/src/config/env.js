@@ -1,6 +1,17 @@
 import dotenv from 'dotenv';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-dotenv.config();
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const backendRoot = path.resolve(currentDir, '..', '..');
+const repoRoot = path.resolve(backendRoot, '..');
+
+for (const envPath of [path.join(backendRoot, '.env'), path.join(repoRoot, '.env')]) {
+  if (existsSync(envPath)) {
+    dotenv.config({ path: envPath, override: false });
+  }
+}
 
 const dbPort = process.env.DB_PORT ? Number(process.env.DB_PORT) : undefined;
 

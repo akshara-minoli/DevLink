@@ -17,3 +17,17 @@ export function requireAuth(request, response, next) {
     return response.status(401).json({ message: 'Invalid or expired token.' });
   }
 }
+
+export function requireRole(...roles) {
+  return (request, response, next) => {
+    if (!request.user) {
+      return response.status(401).json({ message: 'Authentication is required.' });
+    }
+
+    if (!roles.includes(request.user.role)) {
+      return response.status(403).json({ message: 'You do not have permission to perform this action.' });
+    }
+
+    return next();
+  };
+}

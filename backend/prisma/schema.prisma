@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum JoinRequestStatus {
+  pending
+  approved
+  rejected
+
+  @@map("join_request_status")
+}
+
+enum ProjectStatus {
+  planning
+  recruiting
+  active
+  completed
+  paused
+
+  @@map("project_status")
+}
+
+model User {
+  id              BigInt    @id @default(autoincrement())
+  name            String
+  email           String    @unique
+  phone           String?
+  passwordHash    String    @map("password_hash")
+  role            String    @default("developer")
+  title           String?
+  bio             String?
+  location        String?
+  avatarUrl       String?   @map("avatar_url")
+  githubUrl       String?   @map("github_url")
+  linkedinUrl     String?   @map("linkedin_url")
+  portfolioUrl    String?   @map("portfolio_url")
+  profileComplete Boolean   @default(false) @map("profile_complete")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  ownedProjects     Project[]              @relation("ProjectOwner")
+  joinRequests      JoinRequest[]
+  projectMemberships ProjectMember[]
+  skills            UserSkill[]
+  notifications     Notification[]
+  sentInvites       CollaborationRequest[] @relation("CollaborationSender")
+  receivedInvites   CollaborationRequest[] @relation("CollaborationRecipient")
+
+  @@map("users")
+}
+
+model Skill {
+  id        BigInt      @id @default(autoincrement())
+  name      String      @unique
+  category  String?     @default("General")
+  createdAt DateTime    @default(now()) @map("created_at")
+  users     UserSkill[]
+
+  @@map("skills")
+}
+
+model UserSkill {
+  userId    BigInt   @map("user_id")
+  skillId   BigInt   @map("skill_id")
+  level     String?  @default("intermediate")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@id([userId, skillId])
+  @@map("user_skills")
+}
+
+model Project {
+  id             BigInt        @id @default(autoincrement())
+  ownerId        BigInt        @map("owner_id")
+  title          String
+  description    String
+  category       String?       @default("Web App")
+  repositoryUrl  String?       @map("repository_url")
+  liveUrl        String?       @map("live_url")
+  techStack      String[]      @default([]) @map("tech_stack")
+  requiredSkills String[]      @default([]) @map("required_skills")
+  teamSize       Int           @default(3) @map("team_size")
+  status         ProjectStatus @default(recruiting)
+  isPublic       Boolean       @default(true) @map("is_public")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  owner        User                   @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members      ProjectMember[]
+  joinRequests JoinRequest[]
+  invites      CollaborationRequest[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@map("projects")
+}
+
+model ProjectMember {
+  projectId BigInt   @map("project_id")
+  userId    BigInt   @map("user_id")
+  role      String   @default("member")
+  joinedAt  DateTime @default(now()) @map("joined_at")
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+  @@map("project_members")
+}
+
+model JoinRequest {
+  id        BigInt            @id @default(autoincrement())
+  userId    BigInt            @map("user_id")
+  projectId BigInt            @map("project_id")
+  message   String?
+  status    JoinRequestStatus @default(pending)
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @updatedAt @map("updated_at")
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@index([projectId])
+  @@map("join_requests")
+}
+
+model CollaborationRequest {
+  id              BigInt            @id @default(autoincrement())
+  projectId       BigInt            @map("project_id")
+  senderId        BigInt            @map("sender_id")
+  recipientId     BigInt            @map("recipient_id")
+  message         String?
+  requestedSkills String[]          @default([]) @map("requested_skills")
+  status          JoinRequestStatus @default(pending)
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  project         Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sender          User              @relation("CollaborationSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient       User              @relation("CollaborationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, recipientId])
+  @@map("collaboration_requests")
+}
+
+model Notification {
+  id        BigInt   @id @default(autoincrement())
+  userId    BigInt   @map("user_id")
+  type      String
+  title     String
+  body      String
+  link      String?
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notifications")
+}
