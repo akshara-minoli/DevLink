@@ -38,9 +38,9 @@ function projectSelect() {
 async function ensureSkills(userId, skillNames, level = 'intermediate') {
   for (const skillName of skillNames) {
     const skill = await query(
-      `INSERT INTO skills (name)
-       VALUES ($1)
-       ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+      `INSERT INTO skills (name, updated_at)
+       VALUES ($1, NOW())
+       ON CONFLICT (name) DO UPDATE SET updated_at = NOW()
        RETURNING id`,
       [skillName],
     );
@@ -234,7 +234,7 @@ platformRouter.get('/projects/recommended', requireAuth, async (request, respons
 });
 
 platformRouter.post('/projects', requireAuth, requireRole(...editableRoles), async (request, response, next) => {
-  const { title, description, category, repositoryUrl, liveUrl, techStack, requiredSkills, teamSize, status } =
+  const { title, description, category, repositoryUrl, liveUrl, techStack, requiredSkills, teamSize, status, collaborators } =
     request.body ?? {};
 
   if (!title || !description) {
@@ -244,8 +244,8 @@ platformRouter.post('/projects', requireAuth, requireRole(...editableRoles), asy
   try {
     const result = await query(
       `INSERT INTO projects (owner_id, title, description, category, repository_url, live_url, tech_stack,
-                             required_skills, team_size, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10::project_status, 'recruiting'))
+                             required_skills, team_size, status, collaborators, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, COALESCE($10::project_status, 'recruiting'), $11, NOW())
        RETURNING *`,
       [
         request.user.sub,
@@ -258,6 +258,7 @@ platformRouter.post('/projects', requireAuth, requireRole(...editableRoles), asy
         normalizeList(requiredSkills),
         Number(teamSize) || 3,
         status || 'recruiting',
+        JSON.stringify(collaborators || []),
       ],
     );
 
@@ -288,7 +289,7 @@ platformRouter.post('/projects', requireAuth, requireRole(...editableRoles), asy
 });
 
 platformRouter.put('/projects/:id', requireAuth, requireRole(...editableRoles), async (request, response, next) => {
-  const { title, description, category, repositoryUrl, liveUrl, techStack, requiredSkills, teamSize, status } =
+  const { title, description, category, repositoryUrl, liveUrl, techStack, requiredSkills, teamSize, status, collaborators } =
     request.body ?? {};
 
   try {
@@ -302,8 +303,8 @@ platformRouter.put('/projects/:id', requireAuth, requireRole(...editableRoles), 
       `UPDATE projects
        SET title = $1, description = $2, category = $3, repository_url = $4, live_url = $5,
            tech_stack = $6, required_skills = $7, team_size = $8, status = $9::project_status,
-           updated_at = NOW()
-       WHERE id = $10
+           collaborators = $10, updated_at = NOW()
+       WHERE id = $11
        RETURNING *`,
       [
         title,
@@ -315,6 +316,7 @@ platformRouter.put('/projects/:id', requireAuth, requireRole(...editableRoles), 
         normalizeList(requiredSkills),
         Number(teamSize) || 3,
         status || 'recruiting',
+        JSON.stringify(collaborators || []),
         request.params.id,
       ],
     );
@@ -347,8 +349,8 @@ platformRouter.post('/projects/:id/join', requireAuth, requireRole(...editableRo
     }
 
     const result = await query(
-      `INSERT INTO join_requests (user_id, project_id, message)
-       VALUES ($1, $2, $3)
+      `INSERT INTO join_requests (user_id, project_id, message, updated_at)
+       VALUES ($1, $2, $3, NOW())
        ON CONFLICT (user_id, project_id) DO UPDATE SET message = EXCLUDED.message, status = 'pending', updated_at = NOW()
        RETURNING *`,
       [request.user.sub, request.params.id, request.body?.message || null],
@@ -406,7 +408,7 @@ platformRouter.patch('/requests/:id', requireAuth, requireRole(...editableRoles)
     }
 
     const updated = await query(
-      `UPDATE join_requests SET status = $1::join_request_status, updated_at = NOW() WHERE id = $2 RETURNING *`,
+      `UPDATE join_requests SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
       [status, request.params.id],
     );
 
@@ -443,8 +445,8 @@ platformRouter.post('/projects/:id/collaborators', requireAuth, requireRole(...e
     }
 
     const result = await query(
-      `INSERT INTO collaboration_requests (project_id, sender_id, recipient_id, message, requested_skills)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO collaboration_requests (project_id, sender_id, recipient_id, message, requested_skills, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())
        ON CONFLICT (project_id, recipient_id) DO UPDATE
        SET message = EXCLUDED.message, requested_skills = EXCLUDED.requested_skills, status = 'pending', updated_at = NOW()
        RETURNING *`,

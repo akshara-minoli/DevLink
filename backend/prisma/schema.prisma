@@ -89,6 +89,7 @@ model Project {
   teamSize       Int           @default(3) @map("team_size")
   status         ProjectStatus @default(recruiting)
   isPublic       Boolean       @default(true) @map("is_public")
+  collaborators  Json?         @default("[]")
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 

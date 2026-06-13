@@ -60,8 +60,8 @@ authRouter.post('/register', async (request, response, next) => {
 
     const passwordHash = await bcrypt.hash(password, 12);
     const createdUser = await query(
-      `INSERT INTO users (name, email, phone, password_hash, role)
-       VALUES ($1, $2, $3, $4, 'developer')
+      `INSERT INTO users (name, email, phone, password_hash, role, updated_at)
+       VALUES ($1, $2, $3, $4, 'developer', NOW())
        RETURNING id, name, email, phone, role, title, bio, location, avatar_url, github_url, linkedin_url, portfolio_url, profile_complete, created_at`,
       [name.trim(), normalizedEmail, phone.trim(), passwordHash],
     );

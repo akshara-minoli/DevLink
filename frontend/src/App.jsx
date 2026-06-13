@@ -20,9 +20,33 @@ const titleOptions = [
   'Mobile Developer',
   'UI/UX Designer',
   'DevOps Engineer',
+  'Cloud Engineer',
   'Data Engineer',
+  'Data Scientist',
+  'Machine Learning Engineer',
+  'AI Engineer',
+  'Cybersecurity Engineer',
   'QA Engineer',
+  'Software Engineer',
+  'Blockchain Developer',
+  'Game Developer',
+  'Technical Lead',
   'Project Manager',
+  'Student Developer',
+  'Freelance Developer',
+  'Other',
+];
+const categoryOptions = [
+  'Web App',
+  'Mobile App',
+  'Desktop App',
+  'API / Backend',
+  'Library / Package',
+  'Machine Learning Model',
+  'Game',
+  'Blockchain / Web3',
+  'DevOps / Tools',
+  'Other',
 ];
 const skillOptions = [
   'HTML',
@@ -44,6 +68,92 @@ const skillOptions = [
   'Java',
   'Figma',
   'AWS',
+  'C',
+  'C++',
+  'C#',
+  'PHP',
+  'Go',
+  'Rust',
+  'Kotlin',
+  'Swift',
+  'Dart',
+  'Ruby',
+  'R',
+  'HTML5',
+  'CSS3',
+  'Sass',
+  'Bootstrap',
+  'React.js',
+  'Next.js',
+  'Angular',
+  'Vue.js',
+  'Redux',
+  'Material UI',
+  'NestJS',
+  'Spring Boot',
+  'ASP.NET Core',
+  'Django',
+  'Flask',
+  'Laravel',
+  'Ruby on Rails',
+  'MySQL',
+  'SQLite',
+  'Oracle Database',
+  'Microsoft SQL Server',
+  'Firebase Firestore',
+  'Redis',
+  'Microsoft Azure',
+  'Google Cloud Platform',
+  'Kubernetes',
+  'Jenkins',
+  'GitHub Actions',
+  'Terraform',
+  'Ansible',
+  'Linux',
+  'React Native',
+  'Flutter',
+  'Xamarin',
+  'Machine Learning',
+  'Deep Learning',
+  'TensorFlow',
+  'PyTorch',
+  'Pandas',
+  'NumPy',
+  'Data Analysis',
+  'Computer Vision',
+  'NLP',
+  'Generative AI',
+  'Selenium',
+  'Cypress',
+  'JUnit',
+  'Jest',
+  'Postman',
+  'Playwright',
+  'GitHub',
+  'GitLab',
+  'Bitbucket',
+  'Adobe XD',
+  'Photoshop',
+  'Illustrator',
+  'User Research',
+  'Wireframing',
+  'Prototyping',
+  'Ethical Hacking',
+  'Penetration Testing',
+  'Network Security',
+  'OWASP',
+  'Security Auditing',
+  'Agile',
+  'Scrum',
+  'Kanban',
+  'Jira',
+  'Trello',
+  'Confluence',
+  'Blockchain',
+  'Web3',
+  'Internet of Things (IoT)',
+  'AR/VR',
+  'Microservices',
   'Other',
 ];
 
@@ -55,6 +165,7 @@ function getStoredUser() {
 function useAuth() {
   const [user, setUser] = useState(getStoredUser);
   const token = localStorage.getItem('devlink_token');
+  const navigate = useNavigate();
 
   function saveSession(nextUser, nextToken) {
     localStorage.setItem('devlink_user', JSON.stringify(nextUser));
@@ -66,6 +177,7 @@ function useAuth() {
     localStorage.removeItem('devlink_user');
     localStorage.removeItem('devlink_token');
     setUser(null);
+    navigate('/');
   }
 
   return { user, token, saveSession, logout, setUser };
@@ -281,9 +393,9 @@ function AuthPage({ mode, auth }) {
         {isRegister ? (
           <>
             <Field label="Name"><input name="name" required placeholder="Alex Morgan" /></Field>
+            <Field label="Phone number"><input name="phone" type="tel" required placeholder="+94 77 123 4567" /></Field>
           </>
         ) : null}
-        <Field label="Phone number"><input name="phone" type="tel" required={isRegister} placeholder="+94 77 123 4567" /></Field>
         <Field label="Email"><input name="email" type="email" required placeholder="alex@example.com" /></Field>
         <Field label="Password">
           <div className="password-field">
@@ -333,6 +445,7 @@ function ProfileEditor({ auth, setup = false }) {
   const [profile, setProfile] = useState(null);
   const [message, setMessage] = useState('');
   const [title, setTitle] = useState('');
+  const [otherTitle, setOtherTitle] = useState('');
   const [selectedSkills, setSelectedSkills] = useState([]);
   const [otherSkill, setOtherSkill] = useState('');
 
@@ -345,7 +458,15 @@ function ProfileEditor({ auth, setup = false }) {
         const customSkills = currentSkills.filter((skill) => !skillOptions.includes(skill));
 
         setProfile(profileData);
-        setTitle(profileData.title ?? '');
+        
+        const dbTitle = profileData.title ?? '';
+        if (dbTitle && !titleOptions.includes(dbTitle)) {
+          setTitle('Other');
+          setOtherTitle(dbTitle);
+        } else {
+          setTitle(dbTitle);
+        }
+
         setSelectedSkills(customSkills.length ? [...presetSkills, 'Other'] : presetSkills);
         setOtherSkill(customSkills.join(', '));
       })
@@ -370,7 +491,8 @@ function ProfileEditor({ auth, setup = false }) {
       return;
     }
 
-    const payload = { ...form, title, skills };
+    const finalTitle = title === 'Other' ? otherTitle.trim() : title;
+    const payload = { ...form, title: finalTitle, skills };
 
     try {
       const data = await api('/api/profile/me', { method: 'PUT', body: JSON.stringify(payload) });
@@ -415,6 +537,15 @@ function ProfileEditor({ auth, setup = false }) {
                 <option value={option} key={option}>{option}</option>
               ))}
             </select>
+            {title === 'Other' ? (
+              <input
+                value={otherTitle}
+                onChange={(e) => setOtherTitle(e.target.value)}
+                placeholder="Type your custom title"
+                required
+                style={{ marginTop: '0.5rem' }}
+              />
+            ) : null}
           </Field>
         </div>
         <Field label="Bio"><textarea name="bio" defaultValue={profile.bio ?? ''} rows="4" required /></Field>
@@ -515,7 +646,49 @@ function Dashboard({ auth }) {
         <div>
           <SectionTitle title="Your projects" action={<Link to="/projects/new">Create project</Link>} />
           <ProjectList projects={mine.slice(0, 3)} compact />
-          {mine.length ? <Link className="btn btn-secondary" to="/collaborators">Request collaborators</Link> : null}
+          {mine.length ? <Link className="btn btn-secondary" to="/collaborators" style={{ marginTop: '1rem', display: 'inline-block' }}>Request collaborators</Link> : null}
+        </div>
+      </section>
+      <section className="split" style={{ marginTop: '2rem' }}>
+        <div>
+          <SectionTitle title="Pending requests" action={<Link to="/requests">View all</Link>} />
+          <div className="cards compact">
+            {requests.incoming?.filter(r => r.status === 'pending').slice(0, 3).map((request) => (
+              <article className="card" key={`req-${request.id}`}>
+                <h3>{request.applicant_name}</h3>
+                <p className="muted">Wants to join: {request.project_title}</p>
+                <div className="actions small" style={{ marginTop: '0.5rem' }}>
+                  <Button variant="secondary" onClick={async () => {
+                    await api(`/api/requests/${request.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'approved' }) });
+                    load();
+                  }}>Approve</Button>
+                  <Button variant="danger" onClick={async () => {
+                    await api(`/api/requests/${request.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'rejected' }) });
+                    load();
+                  }}>Reject</Button>
+                </div>
+              </article>
+            ))}
+            {requests.incoming?.filter(r => r.status === 'pending').length === 0 ? <p className="empty">No pending requests.</p> : null}
+          </div>
+        </div>
+        <div>
+          <SectionTitle title="Unread notifications" action={<Link to="/notifications">View all</Link>} />
+          <div className="cards compact">
+            {notifications.filter(n => !n.is_read).slice(0, 3).map((note) => (
+              <article className="card" key={`note-${note.id}`}>
+                <h3>{note.title}</h3>
+                <p>{note.body}</p>
+                <div className="actions small" style={{ marginTop: '0.5rem' }}>
+                  <Button variant="ghost" onClick={async () => {
+                    await api(`/api/notifications/${note.id}/read`, { method: 'PATCH' });
+                    load();
+                  }}>Mark read</Button>
+                </div>
+              </article>
+            ))}
+            {notifications.filter(n => !n.is_read).length === 0 ? <p className="empty">No unread notifications.</p> : null}
+          </div>
         </div>
       </section>
     </main>
@@ -575,18 +748,75 @@ function ProjectCard({ project, onRefresh }) {
     onRefresh?.();
   }
 
+  async function changeStatus(event) {
+    const newStatus = event.target.value;
+    try {
+      await api(`/api/projects/${project.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          title: project.title,
+          description: project.description,
+          category: project.category,
+          repositoryUrl: project.repository_url,
+          liveUrl: project.live_url,
+          techStack: project.tech_stack,
+          requiredSkills: project.required_skills,
+          teamSize: project.team_size,
+          status: newStatus,
+          collaborators: project.collaborators || [],
+        }),
+      });
+      onRefresh?.();
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
   return (
     <article className="card">
       <div className="card-head">
         <div>
           <h3>{project.title}</h3>
-          <p>{project.category} · {project.status}</p>
+          <p>
+            {project.category} ·{' '}
+            {isOwner ? (
+              <select value={project.status} onChange={changeStatus} style={{ border: 'none', background: 'none', font: 'inherit', color: 'inherit', padding: 0, cursor: 'pointer', outline: 'none' }}>
+                <option value="planning">Planning</option>
+                <option value="recruiting">Recruiting</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+                <option value="paused">Paused</option>
+              </select>
+            ) : (
+              project.status
+            )}
+          </p>
         </div>
         {project.match_count ? <span className="badge">{project.match_count} skill match</span> : null}
       </div>
       <p>{project.description}</p>
       <TagRow label="Stack" items={project.tech_stack} />
       <TagRow label="Needs" items={project.required_skills} />
+      {project.collaborators && project.collaborators.length > 0 ? (
+        <div className="tags" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <span>Collaborators</span>
+          {project.collaborators.map((c, idx) => (
+            <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', background: '#f1f5f9', color: '#334155', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
+              {c.name}
+              {c.github ? (
+                <a
+                  href={`https://github.com/${c.github}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ marginLeft: '0.25rem', color: '#059669', textDecoration: 'underline' }}
+                >
+                  GitHub
+                </a>
+              ) : null}
+            </span>
+          ))}
+        </div>
+      ) : null}
       <p className="muted">Owner: {project.owner?.name ?? 'Unknown'} · Team size: {project.team_size}</p>
       <div className="actions small">
         {user && !isOwner ? <Button variant="secondary" onClick={join}>Request to join</Button> : null}
@@ -632,9 +862,24 @@ function ProjectsPage() {
       <SectionTitle title="Available projects" action={<Link to="/projects/new">Create project</Link>} />
       <section className="filters">
         <input name="q" value={filters.q} onChange={update} placeholder="Search projects" />
-        <input name="skill" value={filters.skill} onChange={update} placeholder="Required skill" />
-        <input name="tech" value={filters.tech} onChange={update} placeholder="Technology" />
-        <input name="category" value={filters.category} onChange={update} placeholder="Category" />
+        <select name="skill" value={filters.skill} onChange={update}>
+          <option value="">Any required skill</option>
+          {skillOptions.map((skill) => (
+            <option value={skill} key={`rs-${skill}`}>{skill}</option>
+          ))}
+        </select>
+        <select name="tech" value={filters.tech} onChange={update}>
+          <option value="">Any technology</option>
+          {skillOptions.map((tech) => (
+            <option value={tech} key={`ts-${tech}`}>{tech}</option>
+          ))}
+        </select>
+        <select name="category" value={filters.category} onChange={update}>
+          <option value="">Any category</option>
+          {categoryOptions.map((cat) => (
+            <option value={cat} key={`cat-${cat}`}>{cat}</option>
+          ))}
+        </select>
         <select name="status" value={filters.status} onChange={update}>
           <option value="">Any status</option>
           <option value="planning">Planning</option>
@@ -654,16 +899,31 @@ function ProjectForm() {
   const editId = location.pathname.match(/\/projects\/(.+)\/edit/)?.[1];
   const [form, setForm] = useState(emptyProject);
   const [message, setMessage] = useState('');
+  const [otherTechStack, setOtherTechStack] = useState('');
+  const [otherRequiredSkills, setOtherRequiredSkills] = useState('');
+  const [collaborators, setCollaborators] = useState([]);
 
   useEffect(() => {
     if (!editId) return;
     api('/api/projects').then((data) => {
       const found = data.projects.find((project) => String(project.id) === String(editId));
       if (found) {
+        const tsArray = found.tech_stack || [];
+        const presetTs = tsArray.filter((skill) => skillOptions.includes(skill));
+        const customTs = tsArray.filter((skill) => !skillOptions.includes(skill));
+
+        const rsArray = found.required_skills || [];
+        const presetRs = rsArray.filter((skill) => skillOptions.includes(skill));
+        const customRs = rsArray.filter((skill) => !skillOptions.includes(skill));
+
+        setOtherTechStack(customTs.join(', '));
+        setOtherRequiredSkills(customRs.join(', '));
+        setCollaborators(found.collaborators || []);
+
         setForm({
           ...found,
-          techStack: asCsv(found.tech_stack),
-          requiredSkills: asCsv(found.required_skills),
+          techStack: asCsv(customTs.length ? [...presetTs, 'Other'] : presetTs),
+          requiredSkills: asCsv(customRs.length ? [...presetRs, 'Other'] : presetRs),
           repositoryUrl: found.repository_url ?? '',
           liveUrl: found.live_url ?? '',
           teamSize: found.team_size,
@@ -674,10 +934,23 @@ function ProjectForm() {
 
   async function submit(event) {
     event.preventDefault();
+
+    const techStackArray = splitCsv(form.techStack);
+    const requiredSkillsArray = splitCsv(form.requiredSkills);
+
+    const finalTechStack = techStackArray
+      .filter((s) => s !== 'Other')
+      .concat(techStackArray.includes('Other') ? splitCsv(otherTechStack) : []);
+
+    const finalRequiredSkills = requiredSkillsArray
+      .filter((s) => s !== 'Other')
+      .concat(requiredSkillsArray.includes('Other') ? splitCsv(otherRequiredSkills) : []);
+
     const payload = {
       ...form,
-      techStack: splitCsv(form.techStack),
-      requiredSkills: splitCsv(form.requiredSkills),
+      techStack: finalTechStack,
+      requiredSkills: finalRequiredSkills,
+      collaborators,
     };
 
     try {
@@ -702,7 +975,14 @@ function ProjectForm() {
         <Field label="Title"><input name="title" value={form.title} onChange={update} required /></Field>
         <Field label="Description"><textarea name="description" value={form.description} onChange={update} rows="4" required /></Field>
         <div className="two-col">
-          <Field label="Category"><input name="category" value={form.category} onChange={update} /></Field>
+          <Field label="Category">
+            <select name="category" value={form.category} onChange={update}>
+              <option value="">Choose a category</option>
+              {categoryOptions.map((cat) => (
+                <option value={cat} key={`form-cat-${cat}`}>{cat}</option>
+              ))}
+            </select>
+          </Field>
           <Field label="Status">
             <select name="status" value={form.status} onChange={update}>
               <option value="planning">Planning</option>
@@ -714,14 +994,127 @@ function ProjectForm() {
           </Field>
         </div>
         <div className="two-col">
-          <Field label="Technology stack"><input name="techStack" value={form.techStack} onChange={update} placeholder="React, Express, PostgreSQL" /></Field>
-          <Field label="Required skills"><input name="requiredSkills" value={form.requiredSkills} onChange={update} placeholder="React, API Design" /></Field>
+          <Field label="Technology stack">
+            <div className="multi-select">
+              {skillOptions.map((skill) => {
+                const currentStack = form.techStack ? splitCsv(form.techStack) : [];
+                return (
+                  <label className="check-pill" key={`tech-${skill}`}>
+                    <input
+                      type="checkbox"
+                      checked={currentStack.includes(skill)}
+                      onChange={() => {
+                        const nextStack = currentStack.includes(skill)
+                          ? currentStack.filter((item) => item !== skill)
+                          : [...currentStack, skill];
+                        update({ target: { name: 'techStack', value: asCsv(nextStack) } });
+                      }}
+                    />
+                    <span>{skill}</span>
+                  </label>
+                );
+              })}
+            </div>
+            {splitCsv(form.techStack || '').includes('Other') ? (
+              <input
+                value={otherTechStack}
+                onChange={(event) => setOtherTechStack(event.target.value)}
+                placeholder="Type other tech stack separated by commas"
+              />
+            ) : null}
+          </Field>
+          <Field label="Required skills">
+            <div className="multi-select">
+              {skillOptions.map((skill) => {
+                const currentSkills = form.requiredSkills ? splitCsv(form.requiredSkills) : [];
+                return (
+                  <label className="check-pill" key={`req-${skill}`}>
+                    <input
+                      type="checkbox"
+                      checked={currentSkills.includes(skill)}
+                      onChange={() => {
+                        const nextSkills = currentSkills.includes(skill)
+                          ? currentSkills.filter((item) => item !== skill)
+                          : [...currentSkills, skill];
+                        update({ target: { name: 'requiredSkills', value: asCsv(nextSkills) } });
+                      }}
+                    />
+                    <span>{skill}</span>
+                  </label>
+                );
+              })}
+            </div>
+            {splitCsv(form.requiredSkills || '').includes('Other') ? (
+              <input
+                value={otherRequiredSkills}
+                onChange={(event) => setOtherRequiredSkills(event.target.value)}
+                placeholder="Type other skills separated by commas"
+              />
+            ) : null}
+          </Field>
         </div>
         <div className="two-col">
           <Field label="Team size"><input name="teamSize" type="number" min="1" value={form.teamSize} onChange={update} /></Field>
           <Field label="Repository URL"><input name="repositoryUrl" value={form.repositoryUrl} onChange={update} /></Field>
         </div>
         <Field label="Live URL"><input name="liveUrl" value={form.liveUrl} onChange={update} /></Field>
+
+        <div style={{ marginTop: '1.5rem', borderTop: '1px solid #e2e8f0', paddingTop: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a', marginBottom: '0.5rem' }}>Current Collaborators</h3>
+          <p className="muted" style={{ marginBottom: '1rem' }}>
+            Add existing collaborators who are already working on this project.
+          </p>
+          <div className="collaborators-list">
+            {collaborators.map((collab, index) => (
+              <div key={index} className="two-col" style={{ alignItems: 'end', marginBottom: '1rem' }}>
+                <Field label="Collaborator Name">
+                  <input
+                    value={collab.name}
+                    onChange={(e) => {
+                      const next = [...collaborators];
+                      next[index] = { ...next[index], name: e.target.value };
+                      setCollaborators(next);
+                    }}
+                    placeholder="e.g. Jane Doe"
+                    required
+                  />
+                </Field>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'end' }}>
+                  <Field label="GitHub Username" style={{ flexGrow: 1 }}>
+                    <input
+                      value={collab.github || ''}
+                      onChange={(e) => {
+                        const next = [...collaborators];
+                        next[index] = { ...next[index], github: e.target.value };
+                        setCollaborators(next);
+                      }}
+                      placeholder="e.g. janedoe"
+                    />
+                  </Field>
+                  <Button
+                    type="button"
+                    variant="danger"
+                    onClick={() => {
+                      setCollaborators(collaborators.filter((_, i) => i !== index));
+                    }}
+                    style={{ height: '42px', padding: '0 1rem' }}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setCollaborators([...collaborators, { name: '', github: '' }])}
+            style={{ marginTop: '0.5rem' }}
+          >
+            + Add Collaborator
+          </Button>
+        </div>
+
         {message ? <p className="error">{message}</p> : null}
         <Button>{editId ? 'Save project' : 'Create project'}</Button>
       </form>

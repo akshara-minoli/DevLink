@@ -140,6 +140,7 @@ export async function initDatabase() {
       team_size INTEGER NOT NULL DEFAULT 3,
       status project_status NOT NULL DEFAULT 'recruiting',
       is_public BOOLEAN NOT NULL DEFAULT TRUE,
+      collaborators JSONB NOT NULL DEFAULT '[]'::jsonb,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
@@ -153,7 +154,8 @@ export async function initDatabase() {
       ADD COLUMN IF NOT EXISTS required_skills TEXT[] NOT NULL DEFAULT '{}',
       ADD COLUMN IF NOT EXISTS team_size INTEGER NOT NULL DEFAULT 3,
       ADD COLUMN IF NOT EXISTS status project_status NOT NULL DEFAULT 'recruiting',
-      ADD COLUMN IF NOT EXISTS is_public BOOLEAN NOT NULL DEFAULT TRUE;
+      ADD COLUMN IF NOT EXISTS is_public BOOLEAN NOT NULL DEFAULT TRUE,
+      ADD COLUMN IF NOT EXISTS collaborators JSONB NOT NULL DEFAULT '[]'::jsonb;
   `);
 
   await query(`
