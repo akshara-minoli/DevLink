@@ -38,18 +38,25 @@ function projectSelect() {
 async function ensureSkills(userId, skillNames, level = 'intermediate') {
   for (const skillName of skillNames) {
     const skill = await query(
-      `INSERT INTO skills (name, updated_at)
-       VALUES ($1, NOW())
-       ON CONFLICT (name) DO UPDATE SET updated_at = NOW()
+      `INSERT INTO skills (name)
+       VALUES ($1)
+       ON CONFLICT (name) DO NOTHING
        RETURNING id`,
       [skillName],
     );
+
+    // If DO NOTHING fired (skill already existed), fetch the existing id
+    let skillId = skill.rows[0]?.id;
+    if (!skillId) {
+      const existing = await query('SELECT id FROM skills WHERE name = $1', [skillName]);
+      skillId = existing.rows[0]?.id;
+    }
 
     await query(
       `INSERT INTO user_skills (user_id, skill_id, level)
        VALUES ($1, $2, $3)
        ON CONFLICT (user_id, skill_id) DO UPDATE SET level = EXCLUDED.level`,
-      [userId, skill.rows[0].id, level],
+      [userId, skillId, level],
     );
   }
 }
@@ -62,9 +69,22 @@ async function notify(userId, type, title, body, link = null) {
   );
 }
 
+function parseSkills(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    return value.split(',').map((item) => item.trim()).filter(Boolean);
+  }
+
+  return [];
+}
+
 platformRouter.get('/profiles', async (request, response, next) => {
   try {
-    const { skill = '', q = '' } = request.query;
+    const { q = '' } = request.query;
+    const selectedSkills = parseSkills(request.query.skills);
     const result = await query(
       `SELECT u.id, u.name, u.role, u.title, u.bio, u.location, u.avatar_url, u.github_url,
               u.linkedin_url, u.portfolio_url, u.profile_complete,
@@ -73,16 +93,59 @@ platformRouter.get('/profiles', async (request, response, next) => {
        FROM users u
        LEFT JOIN user_skills us ON us.user_id = u.id
        LEFT JOIN skills s ON s.id = us.skill_id
-       WHERE ($1 = '' OR s.name::text ILIKE '%' || $1 || '%')
-         AND ($2 = '' OR u.name ILIKE '%' || $2 || '%' OR COALESCE(u.title, '') ILIKE '%' || $2 || '%')
+       WHERE u.role <> 'admin'
+         AND ($1 = '' OR u.name ILIKE '%' || $1 || '%' OR COALESCE(u.title, '') ILIKE '%' || $1 || '%')
+         AND (
+           cardinality($2::text[]) = 0 OR EXISTS (
+             SELECT 1
+             FROM user_skills skill_match
+             JOIN skills skill_name ON skill_name.id = skill_match.skill_id
+             WHERE skill_match.user_id = u.id AND skill_name.name = ANY($2::text[])
+           )
+         )
        GROUP BY u.id
        ORDER BY u.profile_complete DESC, u.created_at DESC`,
-      [skill, q],
+      [q, selectedSkills],
     );
 
     response.json({ profiles: result.rows });
   } catch (error) {
     next(error);
+  }
+});
+
+platformRouter.get('/profiles/:id', async (request, response, next) => {
+  try {
+    const profile = await query(
+      `SELECT u.id, u.name, u.email, u.role, u.title, u.bio, u.location, u.avatar_url, u.github_url,
+              u.linkedin_url, u.portfolio_url, u.profile_complete, u.created_at,
+              COALESCE(json_agg(json_build_object('id', s.id, 'name', s.name, 'level', us.level))
+                FILTER (WHERE s.id IS NOT NULL), '[]') AS skills
+       FROM users u
+       LEFT JOIN user_skills us ON us.user_id = u.id
+       LEFT JOIN skills s ON s.id = us.skill_id
+       WHERE u.id = $1
+       GROUP BY u.id`,
+      [request.params.id],
+    );
+
+    const projects = await query(
+      `SELECT p.id, p.title, p.description, p.category, p.status, p.team_size, p.created_at,
+              CASE WHEN p.owner_id = $1 THEN 'owner' ELSE 'member' END AS role
+       FROM projects p
+       LEFT JOIN project_members pm ON pm.project_id = p.id AND pm.user_id = $1
+       WHERE p.owner_id = $1 OR pm.user_id = $1
+       ORDER BY p.created_at DESC`,
+      [request.params.id],
+    );
+
+    if (!profile.rows.length) {
+      return response.status(404).json({ message: 'Profile not found.' });
+    }
+
+    return response.json({ profile: { ...profile.rows[0], projects: projects.rows } });
+  } catch (error) {
+    return next(error);
   }
 });
 
@@ -390,6 +453,23 @@ platformRouter.get('/requests', requireAuth, async (request, response, next) => 
   }
 });
 
+// Returns count of pending incoming join requests for the current user's projects.
+// Used by the frontend nav badge.
+platformRouter.get('/requests/pending-count', requireAuth, async (request, response, next) => {
+  try {
+    const result = await query(
+      `SELECT COUNT(*) AS count
+       FROM join_requests jr
+       JOIN projects p ON p.id = jr.project_id
+       WHERE p.owner_id = $1 AND jr.status::text = 'pending'`,
+      [request.user.sub],
+    );
+    response.json({ count: Number(result.rows[0].count) });
+  } catch (error) {
+    next(error);
+  }
+});
+
 platformRouter.patch('/requests/:id', requireAuth, requireRole(...editableRoles), async (request, response, next) => {
   const { status } = request.body ?? {};
   if (!['approved', 'rejected'].includes(status)) {
@@ -408,7 +488,7 @@ platformRouter.patch('/requests/:id', requireAuth, requireRole(...editableRoles)
     }
 
     const updated = await query(
-      `UPDATE join_requests SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+      `UPDATE join_requests SET status = $1::"JoinRequestStatus", updated_at = NOW() WHERE id = $2 RETURNING *`,
       [status, request.params.id],
     );
 
@@ -487,8 +567,142 @@ platformRouter.get('/admin/overview', requireAuth, requireRole('admin'), async (
   try {
     const users = await query('SELECT id, name, email, role, profile_complete, created_at FROM users ORDER BY created_at DESC');
     const projects = await query('SELECT id, title, status, category, created_at FROM projects ORDER BY created_at DESC');
-    const requests = await query('SELECT id, status, created_at FROM join_requests ORDER BY created_at DESC');
-    response.json({ users: users.rows, projects: projects.rows, requests: requests.rows });
+    const joinRequests = await query(
+      `SELECT jr.id, jr.status, jr.message, jr.created_at, jr.updated_at,
+              u.id AS applicant_id, u.name AS applicant_name,
+              p.id AS project_id, p.title AS project_title
+       FROM join_requests jr
+       JOIN users u ON u.id = jr.user_id
+       JOIN projects p ON p.id = jr.project_id
+       ORDER BY jr.created_at DESC`,
+    );
+    const approvedJoinRequests = await query(
+      `SELECT jr.id, jr.status, jr.message, jr.created_at, jr.updated_at,
+              u.id AS applicant_id, u.name AS applicant_name,
+              p.id AS project_id, p.title AS project_title
+       FROM join_requests jr
+       JOIN users u ON u.id = jr.user_id
+       JOIN projects p ON p.id = jr.project_id
+       WHERE jr.status::text = 'approved'
+       ORDER BY jr.created_at DESC`,
+    );
+    const stats = await query(
+      `SELECT
+         (SELECT COUNT(*) FROM users) AS user_count,
+         (SELECT COUNT(*) FROM projects) AS project_count,
+         (SELECT COUNT(*) FROM join_requests) AS join_request_count,
+         (SELECT COUNT(*) FROM join_requests WHERE status::text = 'approved') AS approved_join_request_count,
+         (SELECT COUNT(*) FROM notifications) AS notification_count,
+         (SELECT COUNT(*) FROM users WHERE profile_complete = TRUE) AS complete_profile_count
+      `,
+    );
+    response.json({
+      users: users.rows,
+      projects: projects.rows,
+      joinRequests: joinRequests.rows,
+      approvedJoinRequests: approvedJoinRequests.rows,
+      stats: stats.rows[0],
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+platformRouter.patch('/admin/users/:id', requireAuth, requireRole('admin'), async (request, response, next) => {
+  const { name, email, role, title, bio, location, githubUrl, linkedinUrl, portfolioUrl, profileComplete } = request.body ?? {};
+
+  try {
+    const result = await query(
+      `UPDATE users
+       SET name = COALESCE($1, name),
+           email = COALESCE($2, email),
+           role = COALESCE($3, role),
+           title = COALESCE($4, title),
+           bio = COALESCE($5, bio),
+           location = COALESCE($6, location),
+           github_url = COALESCE($7, github_url),
+           linkedin_url = COALESCE($8, linkedin_url),
+           portfolio_url = COALESCE($9, portfolio_url),
+           profile_complete = COALESCE($10, profile_complete),
+           updated_at = NOW()
+       WHERE id = $11
+       RETURNING id, name, email, role, title, bio, location, github_url, linkedin_url, portfolio_url, profile_complete, created_at`,
+      [
+        name?.trim() || null,
+        email?.trim() || null,
+        role?.trim() || null,
+        title?.trim() || null,
+        bio?.trim() || null,
+        location?.trim() || null,
+        githubUrl?.trim() || null,
+        linkedinUrl?.trim() || null,
+        portfolioUrl?.trim() || null,
+        typeof profileComplete === 'boolean' ? profileComplete : null,
+        request.params.id,
+      ],
+    );
+
+    if (!result.rows[0]) {
+      return response.status(404).json({ message: 'User not found.' });
+    }
+
+    response.json({ user: result.rows[0] });
+  } catch (error) {
+    next(error);
+  }
+});
+
+platformRouter.delete('/admin/users/:id', requireAuth, requireRole('admin'), async (request, response, next) => {
+  try {
+    const result = await query('DELETE FROM users WHERE id = $1 RETURNING id', [request.params.id]);
+    if (!result.rows[0]) {
+      return response.status(404).json({ message: 'User not found.' });
+    }
+    response.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+platformRouter.delete('/admin/projects/:id', requireAuth, requireRole('admin'), async (request, response, next) => {
+  try {
+    const result = await query('DELETE FROM projects WHERE id = $1 RETURNING id', [request.params.id]);
+    if (!result.rows[0]) {
+      return response.status(404).json({ message: 'Project not found.' });
+    }
+    response.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+platformRouter.post('/admin/notifications', requireAuth, requireRole('admin'), async (request, response, next) => {
+  const { target = 'all', userId, title, body, link = null } = request.body ?? {};
+
+  if (!title || !body) {
+    return response.status(400).json({ message: 'Title and body are required.' });
+  }
+
+  try {
+    if (target === 'selected') {
+      if (!userId) {
+        return response.status(400).json({ message: 'A user must be selected.' });
+      }
+
+      await query(
+        `INSERT INTO notifications (user_id, type, title, body, link)
+         VALUES ($1, 'admin_broadcast', $2, $3, $4)`,
+        [userId, title, body, link],
+      );
+    } else {
+      await query(
+        `INSERT INTO notifications (user_id, type, title, body, link)
+         SELECT id, 'admin_broadcast', $1, $2, $3 FROM users`,
+        [title, body, link],
+      );
+    }
+
+    response.status(201).json({ message: 'Notification sent.' });
   } catch (error) {
     next(error);
   }

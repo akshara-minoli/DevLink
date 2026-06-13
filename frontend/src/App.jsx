@@ -1,5 +1,5 @@
-import { Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
+import { Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 const emptyProject = {
@@ -183,6 +183,22 @@ function useAuth() {
   return { user, token, saveSession, logout, setUser };
 }
 
+// Shared pending-requests count — fetched once and cleared when the owner visits /requests.
+function usePendingRequests(user) {
+  const [pendingRequests, setPendingRequests] = useState(0);
+
+  useEffect(() => {
+    if (!user) { setPendingRequests(0); return; }
+    api('/api/requests/pending-count')
+      .then((data) => setPendingRequests(data.count))
+      .catch(() => {}); // silent — badge is non-critical
+  }, [user]);
+
+  function clearPending() { setPendingRequests(0); }
+
+  return { pendingRequests, clearPending, setPendingRequests };
+}
+
 async function api(path, options = {}) {
   const token = localStorage.getItem('devlink_token');
   const response = await fetch(`${API_URL}${path}`, {
@@ -208,6 +224,144 @@ function splitCsv(value) {
   return value.split(',').map((item) => item.trim()).filter(Boolean);
 }
 
+function useTheme() {
+  const [theme, setTheme] = useState(() => localStorage.getItem('devlink_theme') ?? 'light');
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('devlink_theme', theme);
+  }, [theme]);
+
+  return [theme, setTheme];
+}
+
+function getInitials(name = '') {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'D';
+}
+
+function formatDate(value) {
+  if (!value) return 'Recently';
+  return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function getExperienceLevel(skillCount = 0) {
+  if (skillCount >= 18) return 'Senior';
+  if (skillCount >= 10) return 'Mid-level';
+  if (skillCount >= 4) return 'Junior';
+  return 'Getting started';
+}
+
+function getProjectProgress(status = 'planning') {
+  return {
+    planning: 18,
+    recruiting: 42,
+    active: 74,
+    completed: 100,
+    paused: 56,
+  }[status] ?? 35;
+}
+
+function getRelativeTime(value) {
+  if (!value) return 'Just now';
+  const delta = Date.now() - new Date(value).getTime();
+  const minutes = Math.round(delta / 60000);
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  return `${days}d ago`;
+}
+
+function calculateMatchPercent(profileSkills = [], selectedSkills = []) {
+  if (!selectedSkills.length) return Math.min(95, (profileSkills.length || 1) * 7);
+  const overlap = profileSkills.filter((skill) => selectedSkills.includes(skill)).length;
+  return Math.max(15, Math.round((overlap / selectedSkills.length) * 100));
+}
+
+function Icon({ name, className = '' }) {
+  const paths = {
+    spark: 'M11 2l1.8 5.1L18 9l-5.1 1.8L11 16l-1.8-5.2L4 9l5.2-1.9L11 2z',
+    stack: 'M4 7l8-4 8 4-8 4-8-4zm0 5l8-4 8 4-8 4-8-4zm0 5l8-4 8 4-8 4-8-4z',
+    users: 'M9 11a3 3 0 1 0-0.001-6.001A3 3 0 0 0 9 11zm10 2.5c0-2.2-2.2-4-5-4s-5 1.8-5 4V16h10v-2.5zM4 13c0-1.9 1.6-3.5 3.5-3.5S11 11.1 11 13V16H4v-3z',
+    bell: 'M12 3a5 5 0 0 0-5 5v2.1C7 11 6.4 12.5 5.4 13.7L4 15h16l-1.4-1.3c-1-1.2-1.6-2.7-1.6-4V8a5 5 0 0 0-5-5zm0 18a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2z',
+    check: 'M9.2 16.2 4.8 11.8l1.4-1.4 3 3 8-8 1.4 1.4-9.4 9.4z',
+    clock: 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm1 4v4.2l3 1.8-.8 1.4-3.7-2.2V8h1.5z',
+    project: 'M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13A1.5 1.5 0 0 1 18.5 20h-13A1.5 1.5 0 0 1 4 18.5v-13zM6 7h12v2H6V7zm0 4h12v2H6v-2zm0 4h8v2H6v-2z',
+    request: 'M6 4h12l2 3v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7l2-3zm0 3h12l-1-1.5H7L6 7zm3 3 3 3 3-3 1.4 1.4L12 17l-4.4-4.6L9 10z',
+    admin: 'M12 2 4 5v6c0 4.9 3.4 9.4 8 11 4.6-1.6 8-6.1 8-11V5l-8-3z',
+  };
+
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d={paths[name] ?? paths.spark} />
+    </svg>
+  );
+}
+
+function UserAvatar({ user, size = 'md', className = '' }) {
+  const dimension = size === 'lg' ? 'avatar-lg' : size === 'sm' ? 'avatar-sm' : 'avatar-md';
+  const label = user?.name ?? 'DevLink user';
+
+  return (
+    <span className={`avatar ${dimension} ${className}`.trim()} aria-label={label}>
+      {user?.avatar_url ? <img src={user.avatar_url} alt={label} /> : <span>{getInitials(user?.name)}</span>}
+    </span>
+  );
+}
+
+function NavItem({ to, end = false, children, className = '' }) {
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      className={({ isActive }) => `nav-link ${isActive ? 'active' : ''} ${className}`.trim()}
+    >
+      {children}
+    </NavLink>
+  );
+}
+
+function StatCard({ icon, label, value, hint, trend }) {
+  return (
+    <article className="stat-card panel">
+      <div className="stat-top">
+        <span className="stat-icon"><Icon name={icon} /></span>
+        {trend ? <span className={`stat-trend ${trend.startsWith('+') ? 'positive' : 'neutral'}`}>{trend}</span> : null}
+      </div>
+      <div>
+        <p>{label}</p>
+        <strong>{value}</strong>
+      </div>
+      {hint ? <span className="stat-hint">{hint}</span> : null}
+    </article>
+  );
+}
+
+function Badge({ children, tone = 'default' }) {
+  return <span className={`pill pill-${tone}`}>{children}</span>;
+}
+
+function SkeletonCard() {
+  return (
+    <article className="panel skeleton-card" aria-hidden="true">
+      <div className="skeleton-line short" />
+      <div className="skeleton-line" />
+      <div className="skeleton-line" />
+      <div className="skeleton-row">
+        <div className="skeleton-chip" />
+        <div className="skeleton-chip" />
+        <div className="skeleton-chip" />
+      </div>
+    </article>
+  );
+}
+
 function Field({ label, children }) {
   return (
     <label className="field">
@@ -225,47 +379,125 @@ function Button({ children, variant = 'primary', ...props }) {
   );
 }
 
-function Shell({ auth, children }) {
+function Shell({ auth, pendingRequests, children, theme, setTheme }) {
   const unread = Number(auth.user?.unread ?? 0);
   const location = useLocation();
   const isWelcomePage = location.pathname === '/';
   const isAuthPage = ['/login', '/register'].includes(location.pathname);
+  const isAdminPage = location.pathname.startsWith('/admin');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    function closeMenu(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', closeMenu);
+    return () => document.removeEventListener('mousedown', closeMenu);
+  }, []);
 
   return (
     <div className="app">
       {!isAuthPage ? (
-        <header className="topbar">
-          <Link className="brand" to="/">
-            DevLink
-          </Link>
-          <nav>
-            {isWelcomePage ? (
-              <>
-                <a href="#about">About Us</a>
-                <a href="#contact">Contact Us</a>
-                <Link to="/login">Login</Link>
-                <Link className="nav-cta" to="/register">Get Started</Link>
-              </>
-            ) : auth.user ? (
-              <>
-                <Link to="/projects">Projects</Link>
-                <Link to="/profiles">Developers</Link>
-                <Link to="/dashboard">Dashboard</Link>
-                <Link to="/requests">Requests</Link>
-                <Link to="/notifications">Notifications{unread ? ` (${unread})` : ''}</Link>
-                {auth.user.role === 'admin' ? <Link to="/admin">Admin</Link> : null}
-                <Button variant="ghost" onClick={auth.logout}>Log out</Button>
-              </>
-            ) : (
-              <>
-                <Link to="/projects">Projects</Link>
-                <Link to="/profiles">Developers</Link>
-                <Link to="/login">Log in</Link>
-                <Link className="nav-cta" to="/register">Get Started</Link>
-              </>
-            )}
-          </nav>
-        </header>
+        isAdminPage && auth.user?.role === 'admin' ? (
+          <header className="topbar admin-topbar">
+            <div className="topbar-brand">
+              <span className="brand-mark"><Icon name="admin" /></span>
+              <div>
+                <span className="brand">DevLink Admin</span>
+                <span className="brand-subtitle">Platform control center</span>
+              </div>
+            </div>
+            <div className="topbar-actions" ref={menuRef}>
+              <button type="button" className="theme-button" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+              </button>
+              <button type="button" className="icon-button" onClick={() => setMenuOpen((value) => !value)}>
+                <UserAvatar user={auth.user} size="sm" />
+              </button>
+              {menuOpen ? (
+                <div className="avatar-menu">
+                  <div className="avatar-menu-header">
+                    <strong>{auth.user.name}</strong>
+                    <span>{auth.user.email}</span>
+                  </div>
+                  <Link className="menu-item" to="/admin" onClick={() => setMenuOpen(false)}>Admin home</Link>
+                  <button type="button" className="menu-item" onClick={() => { setMenuOpen(false); auth.logout(); }}>
+                    Log out
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </header>
+        ) : (
+          <header className="topbar">
+            <div className="topbar-brand">
+              <span className="brand-mark"><Icon name="spark" /></span>
+              <div>
+                <Link className="brand" to="/">
+                  DevLink
+                </Link>
+                <span className="brand-subtitle">Developer collaboration platform</span>
+              </div>
+            </div>
+            <nav className="topbar-nav">
+              {isWelcomePage ? (
+                <>
+                  <a href="#about" className="nav-link">About</a>
+                  <a href="#contact" className="nav-link">Contact</a>
+                  <Link to="/login" className="nav-link">Login</Link>
+                  <Link className="nav-cta" to="/register">Get Started</Link>
+                </>
+              ) : auth.user ? (
+                <>
+                  <NavItem to="/dashboard" end>Dashboard</NavItem>
+                  <NavItem to="/projects">Projects</NavItem>
+                  <NavItem to="/profiles">Developers</NavItem>
+                  <NavItem to="/requests">
+                    Requests
+                    {pendingRequests > 0 ? <span className="nav-badge">{pendingRequests}</span> : null}
+                  </NavItem>
+                  <NavItem to="/notifications">
+                    Notifications{unread ? <span className="nav-badge">{unread}</span> : null}
+                  </NavItem>
+                  {auth.user.role === 'admin' ? <NavItem to="/admin">Admin</NavItem> : null}
+                </>
+              ) : (
+                <>
+                  <NavItem to="/projects">Projects</NavItem>
+                  <NavItem to="/profiles">Developers</NavItem>
+                  <Link to="/login" className="nav-link">Log in</Link>
+                  <Link className="nav-cta" to="/register">Get Started</Link>
+                </>
+              )}
+            </nav>
+            <div className="topbar-actions" ref={menuRef}>
+              <button type="button" className="theme-button" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+              </button>
+              {auth.user ? (
+                <button type="button" className="icon-button" onClick={() => setMenuOpen((value) => !value)} aria-label="Open user menu">
+                  <UserAvatar user={auth.user} size="sm" />
+                </button>
+              ) : null}
+              {menuOpen && auth.user ? (
+                <div className="avatar-menu">
+                  <div className="avatar-menu-header">
+                    <strong>{auth.user.name}</strong>
+                    <span>{auth.user.email}</span>
+                  </div>
+                  <Link className="menu-item" to="/profile/edit" onClick={() => setMenuOpen(false)}>Edit profile</Link>
+                  <Link className="menu-item" to="/notifications" onClick={() => setMenuOpen(false)}>Notifications</Link>
+                  {auth.user.role === 'admin' ? <Link className="menu-item" to="/admin" onClick={() => setMenuOpen(false)}>Admin</Link> : null}
+                  <button type="button" className="menu-item" onClick={() => { setMenuOpen(false); auth.logout(); }}>Log out</button>
+                </div>
+              ) : null}
+            </div>
+          </header>
+        )
       ) : null}
       {children}
     </div>
@@ -368,6 +600,11 @@ function AuthPage({ mode, auth }) {
         body: JSON.stringify(payload),
       });
       auth.saveSession(data.user, data.token);
+      if (data.user.role === 'admin') {
+        navigate('/admin');
+        return;
+      }
+
       navigate(isRegister ? '/profile/setup' : '/dashboard');
     } catch (error) {
       setMessage(error.message);
@@ -440,6 +677,102 @@ function ProfileSetup({ auth }) {
   return <ProfileEditor auth={auth} setup />;
 }
 
+function UserProfilePage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    if (!id) return;
+
+    api(`/api/profiles/${id}`)
+      .then((data) => setProfile(data.profile))
+      .catch((error) => setMessage(error.message));
+  }, [id]);
+
+  if (!id) {
+    return <main className="content narrow"><p className="error">Missing profile id.</p></main>;
+  }
+
+  if (message && !profile) {
+    return (
+      <main className="content narrow">
+        <button type="button" className="back-link" onClick={() => navigate(-1)}>
+          Back
+        </button>
+        <p className="error">{message}</p>
+      </main>
+    );
+  }
+
+  if (!profile) {
+    return <main className="content narrow"><p>Loading profile...</p></main>;
+  }
+
+  const profileSkills = profile.skills?.map((skill) => skill.name) ?? [];
+  const profileProjects = profile.projects ?? [];
+
+  return (
+    <main className="content narrow">
+      <button type="button" className="back-link" onClick={() => navigate(-1)}>
+        Back
+      </button>
+      <section className="panel profile-detail">
+        <div className="profile-detail-head">
+          <div>
+            <p className="eyebrow">Developer profile</p>
+            <h1>{profile.name}</h1>
+            <p className="muted">{profile.title ?? profile.role}</p>
+          </div>
+          {profile.profile_complete ? <span className="badge">Profile complete</span> : null}
+        </div>
+
+        <p>{profile.bio ?? 'No bio yet.'}</p>
+
+        <div className="two-col profile-meta">
+          <div>
+            <strong>Location</strong>
+            <span>{profile.location ?? 'Not added'}</span>
+          </div>
+          <div>
+            <strong>Member since</strong>
+            <span>{profile.created_at ? new Date(profile.created_at).toLocaleDateString() : 'Unknown'}</span>
+          </div>
+        </div>
+
+        <TagRow label="Skills" items={profileSkills} />
+
+        <div className="link-row">
+          {profile.github_url ? <a href={profile.github_url} target="_blank" rel="noreferrer">GitHub</a> : null}
+          {profile.linkedin_url ? <a href={profile.linkedin_url} target="_blank" rel="noreferrer">LinkedIn</a> : null}
+          {profile.portfolio_url ? <a href={profile.portfolio_url} target="_blank" rel="noreferrer">Portfolio</a> : null}
+        </div>
+
+        <section className="profile-projects">
+          <div className="section-title">
+            <h2>Projects</h2>
+          </div>
+          <div className="cards single">
+            {profileProjects.length ? profileProjects.map((project) => (
+              <article className="card profile-project" key={project.id}>
+                <div className="card-head">
+                  <div>
+                    <h3>{project.title}</h3>
+                    <p className="muted">{project.category} · {project.status}</p>
+                  </div>
+                  <span className="badge">{project.role}</span>
+                </div>
+                <p>{project.description}</p>
+              </article>
+            )) : <p className="empty">No projects listed yet.</p>}
+          </div>
+        </section>
+      </section>
+    </main>
+  );
+}
+
 function ProfileEditor({ auth, setup = false }) {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
@@ -500,6 +833,11 @@ function ProfileEditor({ auth, setup = false }) {
         ...auth.user,
         name: data.profile.name,
         title: data.profile.title,
+        location: data.profile.location,
+        avatar_url: data.profile.avatar_url,
+        github_url: data.profile.github_url,
+        linkedin_url: data.profile.linkedin_url,
+        portfolio_url: data.profile.portfolio_url,
         profileComplete: data.profile.profile_complete,
       };
       localStorage.setItem('devlink_user', JSON.stringify(updatedUser));
@@ -592,72 +930,141 @@ function ProfileEditor({ auth, setup = false }) {
 }
 
 function Dashboard({ auth }) {
+  if (auth.user?.role === 'admin') {
+    return <Navigate to="/admin" replace />;
+  }
+
+  const [profile, setProfile] = useState(null);
   const [projects, setProjects] = useState([]);
-  const [recommended, setRecommended] = useState([]);
   const [requests, setRequests] = useState({ incoming: [], outgoing: [] });
   const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   async function load() {
-    const [allProjects, recs, reqs, notes] = await Promise.all([
+    setLoading(true);
+    const [profileData, allProjects, reqs, notes] = await Promise.all([
+      api('/api/profile/me'),
       api('/api/projects'),
-      api('/api/projects/recommended'),
       api('/api/requests'),
       api('/api/notifications'),
     ]);
+    setProfile(profileData.profile);
     setProjects(allProjects.projects);
-    setRecommended(recs.projects);
     setRequests(reqs);
     setNotifications(notes.notifications);
+    setLoading(false);
   }
 
   useEffect(() => {
-    load().catch(console.error);
+    load().catch((error) => {
+      console.error(error);
+      setLoading(false);
+    });
   }, []);
 
   const mine = projects.filter((project) => String(project.owner_id) === String(auth.user.id));
+  const joinedProjectIds = new Set(
+    (requests.outgoing ?? [])
+      .filter((request) => request.status === 'approved')
+      .map((request) => String(request.project_id)),
+  );
+  const joinedProjects = projects.filter(
+    (project) => joinedProjectIds.has(String(project.id)) && String(project.owner_id) !== String(auth.user.id),
+  );
+  const approvedCollaborations = (requests.incoming ?? []).filter((request) => request.status === 'approved').length;
+  const unreadNotifications = notifications.filter((note) => !note.is_read).length;
+  const skillsCount = profile?.skills?.length ?? 0;
+  const experience = getExperienceLevel(skillsCount);
+  const location = profile?.location ?? auth.user?.location ?? 'Remote';
+
+  if (loading) {
+    return (
+      <main className="content dashboard-page">
+        <section className="dashboard-hero panel">
+          <div className="dashboard-hero-copy">
+            <div className="skeleton-line short" />
+            <div className="skeleton-line" />
+            <div className="skeleton-line" />
+          </div>
+          <div className="dashboard-hero-aside">
+            <SkeletonCard />
+          </div>
+        </section>
+        <section className="stats-grid">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </section>
+      </main>
+    );
+  }
 
   return (
-    <main className="content">
-      <section className="notice profile-actions">
-        <div>
-          <strong>{auth.user.name}</strong>
-          <span>{auth.user.title ?? 'Complete your title and skills to improve matching.'}</span>
+    <main className="content dashboard-page">
+      <section className="dashboard-hero panel">
+        <div className="dashboard-hero-copy">
+          <div className="hero-profile-row">
+            <UserAvatar user={profile ?? auth.user} size="lg" />
+            <div>
+              <Badge tone="primary">{experience}</Badge>
+              <h1>{auth.user.name}</h1>
+              <p className="muted">{auth.user.title ?? 'Complete your title and skills to improve matching.'}</p>
+            </div>
+          </div>
+          <div className="hero-metadata">
+            <span><Icon name="users" /> {location}</span>
+            <span><Icon name="stack" /> {skillsCount} skills</span>
+            <span><Icon name="project" /> {mine.length} projects</span>
+            <span><Icon name="check" /> {approvedCollaborations} collaborations</span>
+          </div>
         </div>
-        <Link className="btn btn-secondary" to="/profile/edit">Edit profile</Link>
-      </section>
-      {!auth.user.profileComplete ? (
-        <section className="notice">
-          <strong>Finish your profile</strong>
-          <span>Complete skills and social links to improve recommendations.</span>
-          <Link className="btn btn-secondary" to="/profile/setup">Set up profile</Link>
-        </section>
-      ) : null}
-      <section className="dashboard-grid">
-        <Stat label="My projects" value={mine.length} />
-        <Stat label="Recommended" value={recommended.length} />
-        <Stat label="Incoming requests" value={requests.incoming?.filter((request) => request.status === 'pending').length ?? 0} />
-        <Stat label="Unread notifications" value={notifications.filter((note) => !note.is_read).length} />
-      </section>
-      <section className="split">
-        <div>
-          <SectionTitle title="Recommended projects" action={<Link to="/projects">Browse all</Link>} />
-          <ProjectList projects={recommended.slice(0, 3)} compact />
+        <div className="dashboard-hero-aside">
+          <div className="hero-callout">
+            <p>Profile completion</p>
+            <strong>{auth.user.profileComplete ? 'Ready for collaboration' : 'Needs attention'}</strong>
+            <span>{auth.user.profileComplete ? 'Your profile is strong enough to attract collaborators.' : 'Complete skills and links to improve visibility.'}</span>
+            <Link className="btn btn-primary" to="/profile/edit">Edit Profile</Link>
+          </div>
         </div>
-        <div>
-          <SectionTitle title="Your projects" action={<Link to="/projects/new">Create project</Link>} />
+      </section>
+
+      <section className="stats-grid">
+        <StatCard icon="project" label="My Projects" value={mine.length} hint="Owned or managed projects" trend="+0.0%" />
+        <StatCard icon="spark" label="Joined Projects" value={joinedProjects.length} hint="Approved join requests" trend={joinedProjects.length ? 'Member' : '0'} />
+        <StatCard icon="request" label="Join Requests" value={requests.incoming?.filter((request) => request.status === 'pending').length ?? 0} hint="Pending approvals" trend="Live" />
+        <StatCard icon="bell" label="Notifications" value={unreadNotifications} hint="Unread updates" trend={unreadNotifications ? 'New' : 'Quiet'} />
+      </section>
+
+      <section className="dashboard-columns">
+        <div className="dashboard-column">
+          <SectionTitle title="Joined Projects" action={<Link to="/requests">View requests</Link>} />
+          <ProjectList projects={joinedProjects.slice(0, 3)} compact />
+        </div>
+        <div className="dashboard-column">
+          <SectionTitle title="My Projects" action={<Link to="/projects/new">Create project</Link>} />
           <ProjectList projects={mine.slice(0, 3)} compact />
-          {mine.length ? <Link className="btn btn-secondary" to="/collaborators" style={{ marginTop: '1rem', display: 'inline-block' }}>Request collaborators</Link> : null}
+          {mine.length ? <Link className="btn btn-secondary section-button" to="/collaborators">Request collaborators</Link> : null}
         </div>
       </section>
-      <section className="split" style={{ marginTop: '2rem' }}>
-        <div>
-          <SectionTitle title="Pending requests" action={<Link to="/requests">View all</Link>} />
+
+      <section className="dashboard-columns">
+        <div className="dashboard-column">
+          <SectionTitle title="Pending Requests" action={<Link to="/requests">View all</Link>} />
           <div className="cards compact">
-            {requests.incoming?.filter(r => r.status === 'pending').slice(0, 3).map((request) => (
-              <article className="card" key={`req-${request.id}`}>
-                <h3>{request.applicant_name}</h3>
-                <p className="muted">Wants to join: {request.project_title}</p>
-                <div className="actions small" style={{ marginTop: '0.5rem' }}>
+            {(requests.incoming?.filter((request) => request.status === 'pending').slice(0, 3) ?? []).map((request) => (
+              <article className="request-card panel" key={`req-${request.id}`}>
+                <div className="request-card-head">
+                  <UserAvatar user={{ name: request.applicant_name }} size="sm" />
+                  <div>
+                    <h3>{request.applicant_name}</h3>
+                    <p className="muted">{request.project_title}</p>
+                  </div>
+                  <Badge tone="success">Pending</Badge>
+                </div>
+                <p>{request.message ?? 'No message supplied.'}</p>
+                <TagRow label="Skills" items={request.applicant_skills?.map((skill) => skill.name)} />
+                <div className="actions small">
                   <Button variant="secondary" onClick={async () => {
                     await api(`/api/requests/${request.id}`, { method: 'PATCH', body: JSON.stringify({ status: 'approved' }) });
                     load();
@@ -669,25 +1076,29 @@ function Dashboard({ auth }) {
                 </div>
               </article>
             ))}
-            {requests.incoming?.filter(r => r.status === 'pending').length === 0 ? <p className="empty">No pending requests.</p> : null}
+            {requests.incoming?.filter((request) => request.status === 'pending').length === 0 ? <p className="empty">No pending requests.</p> : null}
           </div>
         </div>
-        <div>
-          <SectionTitle title="Unread notifications" action={<Link to="/notifications">View all</Link>} />
+        <div className="dashboard-column">
+          <SectionTitle title="Recent Notifications" action={<Link to="/notifications">View all</Link>} />
           <div className="cards compact">
-            {notifications.filter(n => !n.is_read).slice(0, 3).map((note) => (
-              <article className="card" key={`note-${note.id}`}>
-                <h3>{note.title}</h3>
-                <p>{note.body}</p>
-                <div className="actions small" style={{ marginTop: '0.5rem' }}>
-                  <Button variant="ghost" onClick={async () => {
-                    await api(`/api/notifications/${note.id}/read`, { method: 'PATCH' });
-                    load();
-                  }}>Mark read</Button>
+            {notifications.filter((note) => !note.is_read).slice(0, 3).map((note) => (
+              <article className="notification-card panel" key={`note-${note.id}`}>
+                <div className="notification-card-head">
+                  <span className="notification-icon"><Icon name="bell" /></span>
+                  <div>
+                    <h3>{note.title}</h3>
+                    <p className="muted">{getRelativeTime(note.created_at)}</p>
+                  </div>
                 </div>
+                <p>{note.body}</p>
+                <Button variant="ghost" onClick={async () => {
+                  await api(`/api/notifications/${note.id}/read`, { method: 'PATCH' });
+                  load();
+                }}>Mark read</Button>
               </article>
             ))}
-            {notifications.filter(n => !n.is_read).length === 0 ? <p className="empty">No unread notifications.</p> : null}
+            {notifications.filter((n) => !n.is_read).length === 0 ? <p className="empty">No unread notifications.</p> : null}
           </div>
         </div>
       </section>
@@ -718,7 +1129,7 @@ function ProjectList({ projects, compact = false, onRefresh }) {
   return (
     <div className={compact ? 'cards compact' : 'cards'}>
       {projects.map((project) => (
-        <ProjectCard key={project.id} project={project} onRefresh={onRefresh} />
+        project.__loading ? <SkeletonCard key={project.id} /> : <ProjectCard key={project.id} project={project} onRefresh={onRefresh} />
       ))}
     </div>
   );
@@ -728,6 +1139,9 @@ function ProjectCard({ project, onRefresh }) {
   const user = getStoredUser();
   const isOwner = user && String(project.owner_id) === String(user.id);
   const [message, setMessage] = useState('');
+  const progress = getProjectProgress(project.status);
+  const techStack = project.tech_stack ?? [];
+  const requiredSkills = project.required_skills ?? [];
 
   async function join() {
     try {
@@ -773,56 +1187,52 @@ function ProjectCard({ project, onRefresh }) {
   }
 
   return (
-    <article className="card">
-      <div className="card-head">
-        <div>
+    <article className="project-card panel">
+      <div className="project-card-header">
+        <div className="project-card-title">
+          <Badge tone="primary">{project.category}</Badge>
           <h3>{project.title}</h3>
-          <p>
-            {project.category} ·{' '}
-            {isOwner ? (
-              <select value={project.status} onChange={changeStatus} style={{ border: 'none', background: 'none', font: 'inherit', color: 'inherit', padding: 0, cursor: 'pointer', outline: 'none' }}>
-                <option value="planning">Planning</option>
-                <option value="recruiting">Recruiting</option>
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-                <option value="paused">Paused</option>
-              </select>
-            ) : (
-              project.status
-            )}
-          </p>
+          <p className="muted">{project.description}</p>
         </div>
-        {project.match_count ? <span className="badge">{project.match_count} skill match</span> : null}
+        {project.match_count ? <Badge tone="success">{project.match_count}% match</Badge> : <Badge tone="neutral">{project.status}</Badge>}
       </div>
-      <p>{project.description}</p>
-      <TagRow label="Stack" items={project.tech_stack} />
-      <TagRow label="Needs" items={project.required_skills} />
+
+      <div className="project-progress">
+        <div className="project-progress-head">
+          <span>Progress</span>
+          <strong>{progress}%</strong>
+        </div>
+        <div className="progress-bar"><span style={{ width: `${progress}%` }} /></div>
+      </div>
+
+      <div className="project-meta-grid">
+        <div><span>Owner</span><strong>{project.owner?.name ?? 'Unknown'}</strong></div>
+        <div><span>Team size</span><strong>{project.team_size}</strong></div>
+        <div><span>Created</span><strong>{formatDate(project.created_at)}</strong></div>
+      </div>
+
+      <div className="project-tags">
+        <TagRow label="Required" items={requiredSkills} />
+        <TagRow label="Tech" items={techStack} />
+      </div>
+
       {project.collaborators && project.collaborators.length > 0 ? (
-        <div className="tags" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <span>Collaborators</span>
+        <div className="collaborator-strip">
           {project.collaborators.map((c, idx) => (
-            <span key={idx} style={{ display: 'inline-flex', alignItems: 'center', background: '#f1f5f9', color: '#334155', padding: '0.15rem 0.4rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 600 }}>
-              {c.name}
-              {c.github ? (
-                <a
-                  href={`https://github.com/${c.github}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ marginLeft: '0.25rem', color: '#059669', textDecoration: 'underline' }}
-                >
-                  GitHub
-                </a>
-              ) : null}
-            </span>
+            <div className="collaborator-pill" key={idx}>
+              <span>{c.name}</span>
+              {c.github ? <a href={`https://github.com/${c.github}`} target="_blank" rel="noreferrer">GitHub</a> : null}
+            </div>
           ))}
         </div>
       ) : null}
-      <p className="muted">Owner: {project.owner?.name ?? 'Unknown'} · Team size: {project.team_size}</p>
-      <div className="actions small">
+
+      <div className="actions small project-actions">
         {user && !isOwner ? <Button variant="secondary" onClick={join}>Request to join</Button> : null}
         {isOwner ? <Link className="btn btn-secondary" to={`/projects/${project.id}/edit`}>Edit</Link> : null}
         {isOwner ? <Button variant="danger" onClick={remove}>Delete</Button> : null}
       </div>
+
       {message ? <p className={message.includes('sent') ? 'success' : 'error'}>{message}</p> : null}
     </article>
   );
@@ -1124,10 +1534,15 @@ function ProjectForm() {
 
 function ProfilesPage() {
   const [profiles, setProfiles] = useState([]);
-  const [skill, setSkill] = useState('');
+  const [filters, setFilters] = useState({ q: '', skills: [] });
+  const [draftFilters, setDraftFilters] = useState({ q: '', skills: [] });
 
-  async function load(nextSkill = skill) {
-    const data = await api(`/api/profiles${nextSkill ? `?skill=${encodeURIComponent(nextSkill)}` : ''}`);
+  async function load(nextFilters = filters) {
+    const params = new URLSearchParams();
+    if (nextFilters.q) params.set('q', nextFilters.q);
+    if (nextFilters.skills.length) params.set('skills', nextFilters.skills.join(','));
+
+    const data = await api(`/api/profiles${params.toString() ? `?${params.toString()}` : ''}`);
     setProfiles(data.profiles);
   }
 
@@ -1135,33 +1550,94 @@ function ProfilesPage() {
     load().catch(console.error);
   }, []);
 
+  function updateName(event) {
+    setDraftFilters((current) => ({ ...current, q: event.target.value }));
+  }
+
+  function toggleSkill(skillName) {
+    const nextSkills = draftFilters.skills.includes(skillName)
+      ? draftFilters.skills.filter((item) => item !== skillName)
+      : [...draftFilters.skills, skillName];
+    setDraftFilters((current) => ({ ...current, skills: nextSkills }));
+  }
+
+  function submitSearch(event) {
+    event.preventDefault();
+    setFilters(draftFilters);
+    load(draftFilters).catch(console.error);
+  }
+
   return (
-    <main className="content">
-      <SectionTitle title="Developer profiles" />
-      <section className="filters">
-        <input value={skill} onChange={(event) => setSkill(event.target.value)} placeholder="Filter by skill" />
-        <Button variant="secondary" onClick={() => load()}>Search</Button>
-      </section>
-      <div className="cards">
-        {profiles.map((profile) => (
-          <article className="card" key={profile.id}>
-            <h3>{profile.name}</h3>
-            <p className="muted">{profile.title ?? profile.role}</p>
-            <p>{profile.bio ?? 'No bio yet.'}</p>
-            <TagRow label="Skills" items={profile.skills?.map((item) => item.name)} />
-            <div className="link-row">
-              {profile.github_url ? <a href={profile.github_url}>GitHub</a> : null}
-              {profile.linkedin_url ? <a href={profile.linkedin_url}>LinkedIn</a> : null}
-              {profile.portfolio_url ? <a href={profile.portfolio_url}>Portfolio</a> : null}
-            </div>
-          </article>
-        ))}
+    <main className="content page-shell">
+      <div className="page-header">
+        <div>
+          <p className="eyebrow">Developers</p>
+          <h1>Discover professional developer profiles</h1>
+          <p className="muted">Search by name, title, or multiple skills to find collaborators that match your stack and pace.</p>
+        </div>
+        <div className="search-summary">
+          <strong>{profiles.length}</strong>
+          <span>profiles</span>
+        </div>
+      </div>
+      <form className="filters profiles-filters panel" onSubmit={submitSearch}>
+        <div className="search-controls">
+          <input value={draftFilters.q} onChange={updateName} placeholder="Search by name or title" />
+          <Button type="submit">Search developers</Button>
+        </div>
+        <div className="skill-picker">
+          {skillOptions.map((skill) => (
+            <label className={`check-pill ${draftFilters.skills.includes(skill) ? 'selected' : ''}`} key={skill}>
+              <input
+                type="checkbox"
+                checked={draftFilters.skills.includes(skill)}
+                onChange={() => toggleSkill(skill)}
+              />
+              <span>{skill}</span>
+            </label>
+          ))}
+        </div>
+      </form>
+      <div className="cards profile-grid">
+        {profiles.map((profile) => {
+          const skillNames = profile.skills?.map((item) => item.name) ?? [];
+          const matchPercent = calculateMatchPercent(skillNames, filters.skills);
+          const experience = getExperienceLevel(skillNames.length);
+
+          return (
+            <article className="profile-card panel" key={profile.id}>
+              <div className="profile-card-head">
+                <UserAvatar user={profile} size="md" />
+                <div className="profile-card-copy">
+                  <div className="profile-card-topline">
+                    <h3>{profile.name}</h3>
+                    <Badge tone={profile.profile_complete ? 'success' : 'neutral'}>{profile.profile_complete ? 'Available' : 'Profile building'}</Badge>
+                  </div>
+                  <p className="muted">{profile.title ?? profile.role}</p>
+                </div>
+                <div className="profile-match">{matchPercent}%</div>
+              </div>
+              <p>{profile.bio ?? 'No bio yet.'}</p>
+              <div className="profile-details-row">
+                <span><Icon name="spark" /> {experience}</span>
+                <span><Icon name="users" /> {profile.location ?? 'Remote'}</span>
+              </div>
+              <TagRow label="Skills" items={skillNames} />
+              <div className="link-row profile-link-row">
+                {profile.github_url ? <a href={profile.github_url} target="_blank" rel="noreferrer">GitHub</a> : null}
+                {profile.linkedin_url ? <a href={profile.linkedin_url} target="_blank" rel="noreferrer">LinkedIn</a> : null}
+                {profile.portfolio_url ? <a href={profile.portfolio_url} target="_blank" rel="noreferrer">Portfolio</a> : null}
+              </div>
+              <Link className="btn btn-secondary profile-view-btn" to={`/profiles/${profile.id}`}>View Profile</Link>
+            </article>
+          );
+        })}
       </div>
     </main>
   );
 }
 
-function RequestsPage() {
+function RequestsPage({ onOpen }) {
   const [requests, setRequests] = useState({ incoming: [], outgoing: [] });
 
   async function load() {
@@ -1175,39 +1651,60 @@ function RequestsPage() {
 
   useEffect(() => {
     load().catch(console.error);
+    onOpen?.(); // clear the pending badge when the page is opened
   }, []);
 
   return (
-    <main className="content split">
-      <section>
-        <SectionTitle title="Incoming join requests" />
-        <div className="cards single">
-          {requests.incoming?.map((request) => (
-            <article className="card" key={request.id}>
-              <h3>{request.applicant_name}</h3>
-              <p className="muted">{request.project_title} · {request.status}</p>
-              <p>{request.message ?? 'No message supplied.'}</p>
-              <TagRow label="Applicant skills" items={request.applicant_skills?.map((skill) => skill.name)} />
-              {request.status === 'pending' ? (
-                <div className="actions small">
-                  <Button variant="secondary" onClick={() => review(request.id, 'approved')}>Approve</Button>
-                  <Button variant="danger" onClick={() => review(request.id, 'rejected')}>Reject</Button>
-                </div>
-              ) : null}
-            </article>
-          ))}
+    <main className="content page-shell">
+      <div className="page-header">
+        <div>
+          <p className="eyebrow">Requests</p>
+          <h1>Manage incoming and outgoing requests</h1>
+          <p className="muted">Review applicants, see matching skills, and track every request in one place.</p>
         </div>
-      </section>
-      <section>
-        <SectionTitle title="My join requests" />
-        <div className="cards single">
-          {requests.outgoing?.map((request) => (
-            <article className="card" key={request.id}>
-              <h3>{request.project_title}</h3>
-              <p className="muted">{request.status}</p>
-              <p>{request.message}</p>
-            </article>
-          ))}
+      </div>
+      <section className="dashboard-columns">
+        <div className="dashboard-column">
+          <SectionTitle title="Incoming join requests" />
+          <div className="cards single">
+            {requests.incoming?.map((request) => (
+              <article className={`request-card panel ${request.status !== 'pending' ? 'muted-card' : ''}`} key={request.id}>
+                <div className="request-card-head">
+                  <UserAvatar user={{ name: request.applicant_name }} size="sm" />
+                  <div>
+                    <h3>{request.applicant_name}</h3>
+                    <p className="muted">{request.applicant_title ?? 'Developer'} · {request.project_title}</p>
+                  </div>
+                  <Badge tone={request.status === 'pending' ? 'success' : 'neutral'}>{request.status}</Badge>
+                </div>
+                <p>{request.message ?? 'No message supplied.'}</p>
+                <TagRow label="Matching skills" items={request.applicant_skills?.map((skill) => skill.name)} />
+                {request.status === 'pending' ? (
+                  <div className="actions small">
+                    <Button variant="secondary" onClick={() => review(request.id, 'approved')}>Accept</Button>
+                    <Button variant="danger" onClick={() => review(request.id, 'rejected')}>Reject</Button>
+                  </div>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        </div>
+        <div className="dashboard-column">
+          <SectionTitle title="My join requests" />
+          <div className="cards single">
+            {requests.outgoing?.map((request) => (
+              <article className="request-card panel" key={request.id}>
+                <div className="request-card-head">
+                  <UserAvatar user={{ name: request.project_title }} size="sm" />
+                  <div>
+                    <h3>{request.project_title}</h3>
+                    <p className="muted">{request.status}</p>
+                  </div>
+                </div>
+                <p>{request.message}</p>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
     </main>
@@ -1317,15 +1814,29 @@ function NotificationsPage() {
   }, []);
 
   return (
-    <main className="content narrow">
-      <SectionTitle title="Notifications" />
-      <div className="cards single">
+    <main className="content page-shell">
+      <div className="page-header">
+        <div>
+          <p className="eyebrow">Notifications</p>
+          <h1>Stay on top of activity</h1>
+          <p className="muted">Compact updates, timestamps, and quick actions without visual clutter.</p>
+        </div>
+      </div>
+      <div className="cards notification-grid">
         {notifications.map((note) => (
-          <article className={`card ${note.is_read ? '' : 'highlight'}`} key={note.id}>
-            <h3>{note.title}</h3>
+          <article className={`notification-card panel ${note.is_read ? 'is-read' : 'is-unread'}`} key={note.id}>
+            <div className="notification-card-head">
+              <span className="notification-icon"><Icon name="bell" /></span>
+              <div>
+                <h3>{note.title}</h3>
+                <p className="muted">{getRelativeTime(note.created_at)}</p>
+              </div>
+            </div>
             <p>{note.body}</p>
-            <p className="muted">{new Date(note.created_at).toLocaleString()}</p>
-            {!note.is_read ? <Button variant="secondary" onClick={() => markRead(note.id)}>Mark read</Button> : null}
+            <div className="actions small">
+              {!note.is_read ? <Button variant="secondary" onClick={() => markRead(note.id)}>Mark as Read</Button> : <Badge tone="success">Read</Badge>}
+              {note.link ? <Link className="btn btn-ghost" to={note.link}>Open</Link> : null}
+            </div>
           </article>
         ))}
       </div>
@@ -1334,45 +1845,320 @@ function NotificationsPage() {
 }
 
 function AdminPage() {
-  const [overview, setOverview] = useState({ users: [], projects: [], requests: [] });
+  const [overview, setOverview] = useState({ users: [], projects: [], joinRequests: [], approvedJoinRequests: [], stats: {} });
+  const [message, setMessage] = useState('');
+  const [userFilter, setUserFilter] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [userForm, setUserForm] = useState({});
+  const [projectFilter, setProjectFilter] = useState('');
+  const [notificationTarget, setNotificationTarget] = useState('all');
+  const [notificationUserFilter, setNotificationUserFilter] = useState('');
+  const [notificationForm, setNotificationForm] = useState({ title: '', body: '', link: '' });
+
+  const userMap = useMemo(() => new Map(overview.users.map((user) => [String(user.id), user])), [overview.users]);
+  const filteredUsers = useMemo(
+    () => overview.users.filter((user) => {
+      const haystack = `${user.name ?? ''} ${user.email ?? ''} ${user.role ?? ''}`.toLowerCase();
+      return haystack.includes(userFilter.toLowerCase());
+    }),
+    [overview.users, userFilter],
+  );
+  const filteredNotificationUsers = useMemo(
+    () => overview.users.filter((user) => {
+      const haystack = `${user.name ?? ''} ${user.email ?? ''}`.toLowerCase();
+      return haystack.includes(notificationUserFilter.toLowerCase());
+    }),
+    [overview.users, notificationUserFilter],
+  );
+  const filteredProjects = useMemo(
+    () => overview.projects.filter((project) => {
+      const haystack = `${project.title ?? ''} ${project.category ?? ''} ${project.status ?? ''}`.toLowerCase();
+      return haystack.includes(projectFilter.toLowerCase());
+    }),
+    [overview.projects, projectFilter],
+  );
+
+  async function load() {
+    const data = await api('/api/admin/overview');
+    setOverview(data);
+    setSelectedUserId((current) => current || data.users[0]?.id || '');
+  }
 
   useEffect(() => {
-    api('/api/admin/overview').then(setOverview).catch(console.error);
+    load().catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if (!selectedUserId && overview.users.length) {
+      const firstUser = overview.users[0];
+      setSelectedUserId(firstUser.id);
+      setUserForm({
+        name: firstUser.name ?? '',
+        email: firstUser.email ?? '',
+        role: firstUser.role ?? 'developer',
+        title: firstUser.title ?? '',
+        bio: firstUser.bio ?? '',
+        location: firstUser.location ?? '',
+        githubUrl: firstUser.github_url ?? '',
+        linkedinUrl: firstUser.linkedin_url ?? '',
+        portfolioUrl: firstUser.portfolio_url ?? '',
+        profileComplete: Boolean(firstUser.profile_complete),
+      });
+    }
+  }, [overview.users, selectedUserId]);
+
+  useEffect(() => {
+    const selectedUser = userMap.get(String(selectedUserId));
+    if (!selectedUser) return;
+
+    setUserForm({
+      name: selectedUser.name ?? '',
+      email: selectedUser.email ?? '',
+      role: selectedUser.role ?? 'developer',
+      title: selectedUser.title ?? '',
+      bio: selectedUser.bio ?? '',
+      location: selectedUser.location ?? '',
+      githubUrl: selectedUser.github_url ?? '',
+      linkedinUrl: selectedUser.linkedin_url ?? '',
+      portfolioUrl: selectedUser.portfolio_url ?? '',
+      profileComplete: Boolean(selectedUser.profile_complete),
+    });
+  }, [selectedUserId, userMap]);
+
+  async function updateUser(event) {
+    event.preventDefault();
+    setMessage('');
+    try {
+      await api(`/api/admin/users/${selectedUserId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(userForm),
+      });
+      await load();
+      setMessage('User updated.');
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  async function deleteUser(userId) {
+    if (!confirm('Delete this user? This cannot be undone.')) return;
+
+    setMessage('');
+    try {
+      await api(`/api/admin/users/${userId}`, { method: 'DELETE' });
+      if (String(selectedUserId) === String(userId)) {
+        setSelectedUserId('');
+      }
+      await load();
+      setMessage('User deleted.');
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  async function deleteProject(projectId) {
+    if (!confirm('Delete this project? This cannot be undone.')) return;
+
+    setMessage('');
+    try {
+      await api(`/api/admin/projects/${projectId}`, { method: 'DELETE' });
+      await load();
+      setMessage('Project deleted.');
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  async function sendNotification(event) {
+    event.preventDefault();
+    setMessage('');
+    try {
+      await api('/api/admin/notifications', {
+        method: 'POST',
+        body: JSON.stringify({
+          target: notificationTarget,
+          userId: notificationTarget === 'selected' ? notificationForm.userId : undefined,
+          title: notificationForm.title,
+          body: notificationForm.body,
+          link: notificationForm.link || null,
+        }),
+      });
+      setNotificationForm({ title: '', body: '', link: '' });
+      setMessage('Notification sent.');
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  function updateUserForm(event) {
+    const { name, type, checked, value } = event.target;
+    setUserForm((current) => ({ ...current, [name]: type === 'checkbox' ? checked : value }));
+  }
+
+  function updateNotificationForm(event) {
+    setNotificationForm((current) => ({ ...current, [event.target.name]: event.target.value }));
+  }
 
   return (
     <main className="content">
-      <SectionTitle title="Admin moderation" />
-      <section className="dashboard-grid">
-        <Stat label="Users" value={overview.users.length} />
-        <Stat label="Projects" value={overview.projects.length} />
-        <Stat label="Join requests" value={overview.requests.length} />
+      <div className="admin-header">
+        <SectionTitle title="Admin moderation" />
+        <nav className="admin-nav" aria-label="Admin section navigation">
+          <a href="#admin-stats">Statistics</a>
+          <a href="#admin-users">Users</a>
+          <a href="#admin-projects">Projects</a>
+          <a href="#admin-collaborations">Collaborations</a>
+          <a href="#admin-notifications">Notifications</a>
+        </nav>
+      </div>
+      {message ? <p className={message.includes('deleted') || message.includes('updated') || message.includes('sent') ? 'success' : 'error'}>{message}</p> : null}
+      <section className="dashboard-grid" id="admin-stats">
+        <Stat label="Users" value={overview.stats.user_count ?? overview.users.length} />
+        <Stat label="Projects" value={overview.stats.project_count ?? overview.projects.length} />
+        <Stat label="Join requests" value={overview.stats.join_request_count ?? overview.joinRequests.length} />
+        <Stat label="Approved join requests" value={overview.stats.approved_join_request_count ?? overview.approvedJoinRequests.length} />
+        <Stat label="Notifications" value={overview.stats.notification_count ?? 0} />
+        <Stat label="Complete profiles" value={overview.stats.complete_profile_count ?? 0} />
       </section>
-      <section className="split">
-        <div>
-          <SectionTitle title="Recent users" />
-          <div className="cards single">
-            {overview.users.slice(0, 8).map((user) => (
-              <article className="row-card" key={user.id}>
-                <strong>{user.name}</strong>
-                <span>{user.email}</span>
-                <b>{user.role}</b>
+      <section className="split admin-grid">
+        <div id="admin-users">
+          <SectionTitle title="Users" />
+          <section className="filters admin-searches">
+            <input value={userFilter} onChange={(event) => setUserFilter(event.target.value)} placeholder="Search users by name, email, or role" />
+          </section>
+          <div className="cards single admin-list">
+            {filteredUsers.map((user) => (
+              <article className={`row-card admin-row ${String(selectedUserId) === String(user.id) ? 'highlight' : ''}`} key={user.id}>
+                <button type="button" className="admin-row-main" onClick={() => setSelectedUserId(user.id)}>
+                  <strong>{user.name}</strong>
+                  <span>{user.email}</span>
+                  <b>{user.role}</b>
+                </button>
+                <div className="admin-row-actions">
+                  <Button variant="danger" onClick={() => deleteUser(user.id)}>Delete</Button>
+                </div>
               </article>
             ))}
           </div>
         </div>
         <div>
-          <SectionTitle title="Recent projects" />
-          <div className="cards single">
-            {overview.projects.slice(0, 8).map((project) => (
-              <article className="row-card" key={project.id}>
-                <strong>{project.title}</strong>
-                <span>{project.category}</span>
-                <b>{project.status}</b>
+          <SectionTitle title="Edit selected user" />
+          {selectedUserId ? (
+            <form className="panel form admin-form" onSubmit={updateUser}>
+              <div className="two-col">
+                <Field label="Name"><input name="name" value={userForm.name ?? ''} onChange={updateUserForm} /></Field>
+                <Field label="Email"><input name="email" type="email" value={userForm.email ?? ''} onChange={updateUserForm} /></Field>
+              </div>
+              <div className="two-col">
+                <Field label="Role">
+                  <select name="role" value={userForm.role ?? 'developer'} onChange={updateUserForm}>
+                    <option value="developer">Developer</option>
+                    <option value="owner">Owner</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </Field>
+                <Field label="Title"><input name="title" value={userForm.title ?? ''} onChange={updateUserForm} /></Field>
+              </div>
+              <Field label="Bio"><textarea name="bio" rows="4" value={userForm.bio ?? ''} onChange={updateUserForm} /></Field>
+              <div className="two-col">
+                <Field label="Location"><input name="location" value={userForm.location ?? ''} onChange={updateUserForm} /></Field>
+                <Field label="Profile complete">
+                  <label className="check-pill admin-check">
+                    <input type="checkbox" name="profileComplete" checked={Boolean(userForm.profileComplete)} onChange={updateUserForm} />
+                    <span>Mark as complete</span>
+                  </label>
+                </Field>
+              </div>
+              <div className="two-col">
+                <Field label="GitHub URL"><input name="githubUrl" value={userForm.githubUrl ?? ''} onChange={updateUserForm} /></Field>
+                <Field label="LinkedIn URL"><input name="linkedinUrl" value={userForm.linkedinUrl ?? ''} onChange={updateUserForm} /></Field>
+              </div>
+              <Field label="Portfolio URL"><input name="portfolioUrl" value={userForm.portfolioUrl ?? ''} onChange={updateUserForm} /></Field>
+              <div className="form-actions">
+                <Button type="submit">Update user</Button>
+                {selectedUserId ? <Button type="button" variant="danger" onClick={() => deleteUser(selectedUserId)}>Delete selected user</Button> : null}
+              </div>
+            </form>
+          ) : <p className="empty">Select a user to edit.</p>}
+        </div>
+      </section>
+
+      <section className="split" style={{ marginTop: '2rem' }}>
+        <div id="admin-projects">
+          <SectionTitle title="Projects" />
+          <section className="filters admin-searches">
+            <input value={projectFilter} onChange={(event) => setProjectFilter(event.target.value)} placeholder="Search projects by title, category, or status" />
+          </section>
+          <div className="cards single admin-list">
+            {filteredProjects.map((project) => (
+              <article className="card admin-project-card" key={project.id}>
+                <div className="card-head">
+                  <div>
+                    <h3>{project.title}</h3>
+                    <p className="muted">{project.category} · {project.status}</p>
+                  </div>
+                  <span className="badge">#{project.id}</span>
+                </div>
+                <div className="actions small">
+                  <Button variant="danger" onClick={() => deleteProject(project.id)}>Delete project</Button>
+                </div>
               </article>
             ))}
           </div>
         </div>
+        <div id="admin-collaborations">
+          <SectionTitle title="Approved join requests" />
+          <div className="cards single admin-list">
+            {overview.approvedJoinRequests.map((request) => (
+              <article className="card" key={request.id}>
+                <h3>{request.applicant_name}</h3>
+                <p className="muted">
+                  {request.project_title} · {request.status}
+                </p>
+                <p>{request.message ?? 'No message supplied.'}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section style={{ marginTop: '2rem' }} id="admin-notifications">
+        <SectionTitle title="Send notification" />
+        <form className="panel form admin-notification-form" onSubmit={sendNotification}>
+          <div className="two-col">
+            <Field label="Target">
+              <select value={notificationTarget} onChange={(event) => setNotificationTarget(event.target.value)}>
+                <option value="all">All users</option>
+                <option value="selected">Selected user</option>
+              </select>
+            </Field>
+            <Field label="Title"><input name="title" value={notificationForm.title} onChange={updateNotificationForm} required /></Field>
+          </div>
+          <Field label="Message"><textarea name="body" value={notificationForm.body} onChange={updateNotificationForm} rows="4" required /></Field>
+          <Field label="Link (optional)"><input name="link" value={notificationForm.link} onChange={updateNotificationForm} placeholder="/notifications" /></Field>
+          {notificationTarget === 'selected' ? (
+            <Field label="Selected user">
+              <input
+                value={notificationUserFilter}
+                onChange={(event) => setNotificationUserFilter(event.target.value)}
+                placeholder="Search by user name"
+              />
+              <div className="skill-picker admin-user-picker">
+                {filteredNotificationUsers.map((user) => (
+                  <button
+                    key={user.id}
+                    type="button"
+                    className={`check-pill admin-user-option ${String(notificationForm.userId) === String(user.id) ? 'selected' : ''}`}
+                    onClick={() => setNotificationForm((current) => ({ ...current, userId: user.id }))}
+                  >
+                    <span>{user.name} · {user.email}</span>
+                  </button>
+                ))}
+              </div>
+            </Field>
+          ) : null}
+          <Button type="submit">Send notification</Button>
+        </form>
       </section>
     </main>
   );
@@ -1380,21 +2166,24 @@ function AdminPage() {
 
 function App() {
   const auth = useAuth();
+  const [theme, setTheme] = useTheme();
+  const { pendingRequests, clearPending, setPendingRequests } = usePendingRequests(auth.user);
 
   return (
-    <Shell auth={auth}>
+    <Shell auth={auth} pendingRequests={pendingRequests} theme={theme} setTheme={setTheme}>
       <Routes>
         <Route path="/" element={<Landing auth={auth} />} />
         <Route path="/login" element={<AuthPage mode="login" auth={auth} />} />
         <Route path="/register" element={<AuthPage mode="register" auth={auth} />} />
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/profiles" element={<ProfilesPage />} />
-        <Route path="/dashboard" element={<Protected user={auth.user}><Dashboard auth={auth} /></Protected>} />
+        <Route path="/profiles/:id" element={<UserProfilePage />} />
+        <Route path="/dashboard" element={<Protected user={auth.user}><Dashboard auth={auth} onNewRequest={() => setPendingRequests((n) => n + 1)} /></Protected>} />
         <Route path="/profile/setup" element={<Protected user={auth.user}><ProfileSetup auth={auth} /></Protected>} />
         <Route path="/profile/edit" element={<Protected user={auth.user}><ProfileEditor auth={auth} /></Protected>} />
         <Route path="/projects/new" element={<Protected user={auth.user}><ProjectForm /></Protected>} />
         <Route path="/projects/:id/edit" element={<Protected user={auth.user}><ProjectForm /></Protected>} />
-        <Route path="/requests" element={<Protected user={auth.user}><RequestsPage /></Protected>} />
+        <Route path="/requests" element={<Protected user={auth.user}><RequestsPage onOpen={clearPending} /></Protected>} />
         <Route path="/collaborators" element={<Protected user={auth.user}><CollaboratorsPage auth={auth} /></Protected>} />
         <Route path="/notifications" element={<Protected user={auth.user}><NotificationsPage /></Protected>} />
         <Route path="/admin" element={<Protected user={auth.user}><AdminPage /></Protected>} />

@@ -962,3 +962,453 @@
 [0] 
 [0] Node.js v22.19.0
 [0] [31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `node src/server.js`[39m
+[0] DevLink API listening on port 5000
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] error: column "status" is of type "JoinRequestStatus" but expression is of type join_request_status
+[0]     at C:\Users\Akshara\Desktop\DevLink\node_modules\pg-pool\index.js:45:11
+[0]     at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+[0]     at async file:///C:/Users/Akshara/Desktop/DevLink/backend/src/routes/platform.js:417:21 {
+[0]   length: 218,
+[0]   severity: 'ERROR',
+[0]   code: '42804',
+[0]   detail: undefined,
+[0]   hint: 'You will need to rewrite or cast the expression.',
+[0]   position: '35',
+[0]   internalPosition: undefined,
+[0]   internalQuery: undefined,
+[0]   where: undefined,
+[0]   schema: undefined,
+[0]   table: undefined,
+[0]   column: undefined,
+[0]   dataType: undefined,
+[0]   constraint: undefined,
+[0]   file: 'parse_target.c',
+[0]   line: '596',
+[0]   routine: 'transformAssignedExpr'
+[0] }
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `node src/server.js`[39m
+[0] DevLink API listening on port 5000
+[0] [31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[0] [32m[nodemon] restarting due to changes...[39m
+[0] [32m[nodemon] starting `node src/server.js`[39m
+[0] DevLink API listening on port 5000
