@@ -1,88 +1,211 @@
 # DevLink
 
-DevLink is a PERN stack starter for developer collaboration workflows. The repository now includes a runnable Express API, PostgreSQL schema bootstrapping, a React frontend, and Docker Compose so you can bring up the whole stack from the repo root.
+DevLink is a full-stack developer collaboration platform built with React,
+Express, and PostgreSQL. Developers can publish profiles and skills, discover
+projects, request to join teams, invite collaborators, and receive in-app
+notifications. Administrators can moderate users and projects and send
+notifications from a dedicated dashboard.
 
-## What is included
+## Features
 
-- Root workspace scripts for local development
-- Express API with PostgreSQL connectivity and JWT auth endpoints
-- React app with login, register, and dashboard routes
-- Docker Compose for the full stack
+- JWT registration, login, and protected sessions
+- Developer profiles with skills, social links, location, and portfolio details
+- Public profile discovery with text and skill filters
+- Project creation, editing, discovery, and skill-based recommendations
+- Join-request approval and rejection workflows
+- Direct collaborator invitations
+- In-app notifications with read state
+- Admin statistics, user management, project moderation, and announcements
+- Light and dark themes
+- Docker development and production images
+- Jenkins CI with Docker image build stages
+- Kubernetes manifests for PostgreSQL, the API, the web app, and ingress
 
-## Project structure
+## Technology
+
+- Frontend: React 18, React Router, Vite, and Tailwind CSS
+- Backend: Node.js, Express, PostgreSQL, JWT, bcrypt, and Prisma schema tooling
+- Delivery: Docker, Nginx, Jenkins, Kubernetes, and Kustomize
+
+## Repository Structure
 
 ```text
 DevLink/
-├── backend/
-├── frontend/
-├── k8s/
-├── Jenkinsfile
-├── Dockerfile
-├── docker-compose.yml
-├── package.json
-└── README.md
+|-- backend/
+|   |-- prisma/schema.prisma
+|   |-- src/
+|   |-- Dockerfile
+|   `-- package.json
+|-- frontend/
+|   |-- src/
+|   |-- Dockerfile
+|   |-- nginx.conf
+|   `-- package.json
+|-- k8s/base/
+|-- .dockerignore
+|-- .env.example
+|-- docker-compose.yml
+|-- Dockerfile
+|-- Jenkinsfile
+|-- package-lock.json
+`-- package.json
 ```
 
-## Setup
+## Requirements
 
-Install dependencies from the repository root:
+- Node.js 20 or later
+- npm 10 or later
+- PostgreSQL 16, or Docker Desktop with Docker Compose
+
+## Environment
+
+Copy the root example before running locally:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Important variables:
+
+| Variable | Purpose | Development default |
+| --- | --- | --- |
+| `DB_HOST` | PostgreSQL host when `DATABASE_URL` is empty | `localhost` |
+| `DB_PORT` | PostgreSQL port | `5432` |
+| `DB_NAME` | Database name | `devlink` |
+| `DB_USER` | Database user | `postgres` |
+| `DB_PASSWORD` | Database password | Set locally |
+| `DATABASE_URL` | Complete PostgreSQL connection string; overrides `DB_*` | Empty |
+| `JWT_SECRET` | JWT signing secret | Replace before shared or production use |
+| `PORT` | Express API port | `5000` |
+| `CLIENT_ORIGIN` | Allowed browser origin for CORS | `http://localhost:5173` |
+| `VITE_API_URL` | API base URL embedded in the frontend | `http://localhost:5000` |
+
+The API creates and updates the required tables and indexes at startup. The
+schema includes users, skills, projects, project members, join requests,
+collaboration requests, and notifications.
+
+## Local Development
+
+Install all workspace dependencies:
 
 ```bash
-npm install
+npm ci
 ```
 
-Create your environment file from the example:
-
-```bash
-copy .env.example .env
-```
-
-If you want local PostgreSQL outside Docker, set the `DB_*` values in your `.env` file before starting the server.
-
-## Run locally
-
-Start both apps from the repository root:
+Start the frontend and backend together:
 
 ```bash
 npm run dev
 ```
 
-Frontend: `http://localhost:5173`
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:5000`
+- Health check: `http://localhost:5000/api/health`
 
-Backend: `http://localhost:5000`
+Individual workspace commands:
 
-## Run with Docker
+```bash
+npm run dev:frontend
+npm run dev:backend
+npm run build
+```
 
-Use the full-stack container setup from the repository root:
+## Admin Account
+
+Seed the development admin after configuring PostgreSQL:
+
+```bash
+npm run seed:admin --workspace backend
+```
+
+The current seed script creates `admin@devlink.lk` with password `admin@123`.
+These credentials are for local development only and must be changed before
+using the application in a shared environment.
+
+## Docker Development
+
+The root Compose configuration runs PostgreSQL and the combined development
+container:
 
 ```bash
 docker compose up --build
 ```
 
-## Kubernetes manifests
+The application remains available on ports `5173` and `5000`. PostgreSQL data
+is stored in the `db_data` volume.
 
-Base Kubernetes manifests are available in `k8s/base` and include:
-
-- PostgreSQL deployment, service, and PVC
-- API deployment and service
-- Web deployment and service
-- Ingress for the web app
-
-Apply them with:
+Production images use separate Dockerfiles:
 
 ```bash
-kubectl apply -k k8s/base
+docker build -t devlink-api -f backend/Dockerfile .
+docker build --build-arg VITE_API_URL=/api -t devlink-web -f frontend/Dockerfile .
 ```
 
-## Jenkins pipeline
+The web image serves the Vite build through Nginx and proxies `/api/` to the
+`devlink-api` service.
 
-CI/CD pipeline is defined in `Jenkinsfile`. It:
+## API
 
-- Runs install/build/verification checks
-- Builds and pushes `ghcr.io/akshara-minoli/devlink-api` and `ghcr.io/akshara-minoli/devlink-web`
-- Deploys manifests from `k8s/base` to namespace `devlink`
+Health:
 
-Expected Jenkins credentials:
+- `GET /api/health`
+
+Authentication:
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
+
+Profiles and skills:
+
+- `GET /api/profiles`
+- `GET /api/profiles/:id`
+- `GET`, `PUT`, `DELETE /api/profile/me`
+- `POST /api/skills`
+- `DELETE /api/skills/:name`
+- `GET /api/users`
+
+Projects and collaboration:
+
+- `GET`, `POST /api/projects`
+- `GET /api/projects/recommended`
+- `PUT`, `DELETE /api/projects/:id`
+- `POST /api/projects/:id/join`
+- `POST /api/projects/:id/collaborators`
+- `GET /api/requests`
+- `GET /api/requests/pending-count`
+- `PATCH /api/requests/:id`
+
+Notifications and administration:
+
+- `GET /api/notifications`
+- `PATCH /api/notifications/:id/read`
+- `GET /api/admin/overview`
+- `PATCH`, `DELETE /api/admin/users/:id`
+- `DELETE /api/admin/projects/:id`
+- `POST /api/admin/notifications`
+
+Endpoints that modify profiles, projects, requests, or notifications require a
+Bearer token. Administration endpoints additionally require the `admin` role.
+
+## Jenkins
+
+The Jenkins job should use **Pipeline script from SCM**, branch `main`, with
+`Jenkinsfile` as the script path. The pipeline:
+
+1. Checks out the selected revision into a clean workspace.
+2. Verifies access to a Docker daemon.
+3. Runs `npm ci` with a persistent cache and network retries.
+4. Builds the frontend and verifies that the backend application loads.
+5. Builds commit-tagged API and web images.
+6. Pushes images and deploys only when Jenkins identifies a `main` or `master`
+   branch build.
+
+The current standalone Jenkins job does not populate `BRANCH_NAME` or
+`GIT_BRANCH`, so image push and Kubernetes deployment are skipped while CI and
+image builds still run.
+
+Required Jenkins credentials for delivery:
 
 - `ghcr-token`
 - `kubeconfig`
@@ -90,34 +213,32 @@ Expected Jenkins credentials:
 - `devlink-jwt-secret`
 - `devlink-client-origin`
 
-The Jenkins agent must have a Docker CLI and access to a Docker daemon. The
-pipeline honors the Docker connection variables supplied by Jenkins. For a
-TLS-enabled `docker:dind` service on port 2376, configure the agent with:
+The Jenkins agent also needs the Docker CLI, access to a Docker daemon, and
+`kubectl` for deployment. The current local Jenkins container connects through:
 
 ```text
-DOCKER_HOST=tcp://docker:2376
-DOCKER_TLS_VERIFY=1
-DOCKER_CERT_PATH=/certs/client
+DOCKER_HOST=unix:///var/run/docker.sock
 ```
 
-Mount the same client-certificate volume generated by the `docker:dind`
-container at `/certs/client` in the Jenkins container. If Jenkins uses the host
-daemon instead, mount `/var/run/docker.sock:/var/run/docker.sock` and remove the
-`DOCKER_HOST` override. The user running Jenkins must be allowed to access that
-socket.
+This requires mounting `/var/run/docker.sock` into Jenkins and granting the
+Jenkins process access to the socket. A TLS-enabled Docker-in-Docker setup can
+instead use `tcp://docker:2376` with valid client certificates.
 
-## API routes
+## Kubernetes
 
-- `GET /api/health`
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- `GET /api/users`
+The `k8s/base` Kustomize configuration deploys:
 
-## Database
+- Namespace `devlink`
+- PostgreSQL 16 with a 5 Gi persistent volume claim
+- API deployment and service on port `5000`
+- Nginx web deployment and service on port `80`
+- Ingress host `devlink.local`
 
-The backend creates the `users` table on startup when `DATABASE_URL` is configured. The starter is ready for future project, skill, and join-request tables.
+The workloads expect a `devlink-secrets` secret containing
+`POSTGRES_PASSWORD`, `DATABASE_URL`, `JWT_SECRET`, and `CLIENT_ORIGIN`.
 
-## Next steps
+Apply the base manifests with:
 
-Add profile pages, project management features, join requests, and richer authorization rules on top of this scaffold.
+```bash
+kubectl apply -k k8s/base
+```
