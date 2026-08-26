@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devlink-api
+  labels:
+    app: devlink-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devlink-api
+  template:
+    metadata:
+      labels:
+        app: devlink-api
+    spec:
+      containers:
+        - name: api
+          image: ghcr.io/akshara-minoli/devlink-api:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+              name: http
+          env:
+            - name: PORT
+              value: "5000"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: devlink-secrets
+                  key: DATABASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: devlink-secrets
+                  key: JWT_SECRET
+            - name: CLIENT_ORIGIN
+              valueFrom:
+                secretKeyRef:
+                  name: devlink-secrets
+                  key: CLIENT_ORIGIN
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 20
+            periodSeconds: 15

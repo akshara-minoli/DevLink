@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devlink-web
+  labels:
+    app: devlink-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devlink-web
+  template:
+    metadata:
+      labels:
+        app: devlink-web
+    spec:
+      containers:
+        - name: web
+          image: ghcr.io/akshara-minoli/devlink-web:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 20
+            periodSeconds: 15

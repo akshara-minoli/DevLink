@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: devlink-api
+  labels:
+    app: devlink-api
+spec:
+  selector:
+    app: devlink-api
+  ports:
+    - name: http
+      port: 5000
+      targetPort: 5000

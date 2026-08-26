@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: devlink-postgres
+  labels:
+    app: devlink-postgres
+spec:
+  selector:
+    app: devlink-postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
