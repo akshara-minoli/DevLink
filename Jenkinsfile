@@ -90,7 +90,7 @@ pipeline {
                                 fi
                                 docker run --rm \
                                   --user "$(id -u):$(id -g)" \
-                                  --volumes-from "$HOSTNAME" \
+                                  -v /var/jenkins_home:/var/jenkins_home \
                                   -w "$PWD" \
                                   node:20-alpine sh -lc "npm ci \
                                     --cache /var/jenkins_home/.npm-cache \
@@ -115,7 +115,7 @@ pipeline {
                                 fi
                                 docker run --rm \
                                   --user "$(id -u):$(id -g)" \
-                                  --volumes-from "$HOSTNAME" \
+                                  -v /var/jenkins_home:/var/jenkins_home \
                                   -w "$PWD" \
                                   -e VITE_API_URL=/api \
                                   node:20-alpine sh -lc "npm run build --workspace frontend"
@@ -137,7 +137,7 @@ pipeline {
                                 fi
                                 docker run --rm \
                                   --user "$(id -u):$(id -g)" \
-                                  --volumes-from "$HOSTNAME" \
+                                  -v /var/jenkins_home:/var/jenkins_home \
                                   -w "$PWD" \
                                   node:20-alpine sh -lc "node -e \\"import('./backend/src/app.js').then(() => console.log('Backend app loaded successfully'))\\""
                             '''
