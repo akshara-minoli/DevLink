@@ -1,4 +1,6 @@
 # DevLink
+DevOps-Enabled Developer Collaboration Platform
+Docker • Jenkins • Kubernetes • Kustomize • NGINX • PostgreSQL
 
 DevLink is a full-stack developer collaboration platform built with React,
 Express, and PostgreSQL. Developers can publish profiles and skills, discover
